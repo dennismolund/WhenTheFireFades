@@ -1,19 +1,17 @@
-using Microsoft.Data.SqlClient;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using WhenTheFireFades.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString));
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
-
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
-     throw new InvalidOperationException("Connection string 'DatabaseConnectionString'" +
-    " not found.");
-
-builder.Services.AddTransient<SqlConnection>(sp =>
-    new SqlConnection(sp.GetRequiredService<IConfiguration>().GetConnectionString("DefaultConnection")));
-
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -28,6 +26,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(

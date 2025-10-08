@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using WhenTheFireFades.Models;
+using WhenTheFireFades.Models.ViewModels;
 
 namespace WhenTheFireFades.Controllers
 {
