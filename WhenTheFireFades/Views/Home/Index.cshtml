@@ -1,8 +1,88 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "When The Fire Fades";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="min-vh-100 d-flex align-items-center justify-content-center bg-dark">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="text-center mb-5">
+                    <h1 class="display-3 fw-bold text-white mb-3">When The Fire Fades</h1>
+                    <p class="lead text-light opacity-75">A game of deception and strategy</p>
+                </div>
+
+                <div class="card shadow-lg border-0" id="gameOptionsCard">
+                    <div class="card-body p-5">
+                        <div class="text-center mb-4">
+                            <p class="mb-1 text-muted">Playing as</p>
+                            <h4 class="fw-bold" id="displayNickname">@ViewBag.Nickname</h4>
+                        </div>
+
+                        <div class="d-grid gap-3">
+                            <!-- Create Game Button -->
+                            <form asp-controller="Game" asp-action="Create" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-success btn-lg w-100 py-3">
+                                    <i class="bi bi-plus-circle me-2"></i>
+                                    Create New Game
+                                </button>
+                            </form>
+
+                            <!-- Join Game Button -->
+                            <button type="button"
+                                    class="btn btn-outline-primary btn-lg w-100 py-3"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#joinGameModal">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>
+                                Join Existing Game
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger mt-3" role="alert">
+                        @TempData["Error"]
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Join Game Modal -->
+<div class="modal fade" id="joinGameModal" tabindex="-1" aria-labelledby="joinGameModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="joinGameModalLabel">Join Game</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-controller="Game" asp-action="Join" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="gameCode" class="form-label">Game Code</label>
+                        <input type="text"
+                               class="form-control form-control-lg text-center text-uppercase"
+                               id="gameCode"
+                               name="code"
+                               placeholder="ABC123"
+                               maxlength="6"
+                               pattern="[A-Z0-9]{6}"
+                               style="letter-spacing: 0.3em; font-weight: bold;"
+                               required>
+                        <div class="form-text">Enter the 6-character game code</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Join Game</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+

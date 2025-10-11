@@ -4,21 +4,26 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace WhenTheFireFades.Data.Models;
+namespace WhenTheFireFades.Models;
 
-[Table("MissionVote")]
-public partial class MissionVote
+[Index(nameof(RoundId), nameof(Seat), IsUnique = true)]
+public class MissionVote
 {
     [Key]
     public int MissionVoteId { get; set; }
 
+    [Required]
     public int RoundId { get; set; }
 
+    [Required]
     public int Seat { get; set; }
 
+    [Required]
     public bool IsSabotage { get; set; }
 
-    [ForeignKey("RoundId")]
-    [InverseProperty("MissionVotes")]
-    public virtual Round Round { get; set; } = null!;
+    [Column(TypeName = "datetime2")]
+    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+
+    [ForeignKey(nameof(RoundId))]
+    public Round Round { get; set; } = default!;
 }

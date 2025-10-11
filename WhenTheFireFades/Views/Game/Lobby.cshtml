@@ -1,0 +1,26 @@
+﻿@model WhenTheFireFades.Models.Game
+@{
+    ViewData["Title"] = "Lobby";
+}
+
+<h2>Lobby</h2>
+
+<p><strong>Game Code:</strong> @Model.ConnectionCode</p>
+<p><strong>Status:</strong> @Model.Status</p>
+
+<h3>Players</h3>
+@if (Model.Players is null || !Model.Players.Any())
+{
+    <p>No players yet. Share the code with friends.</p>
+}
+else
+{
+    <ul>
+        @foreach (var p in Model.Players.OrderBy(p => p.Seat))
+        {
+            <li>Seat @p.Seat - @p.Nickname</li>
+        }
+    </ul>
+}
+
+<!-- Later: Ready/Start buttons, join link, SignalR live updates -->

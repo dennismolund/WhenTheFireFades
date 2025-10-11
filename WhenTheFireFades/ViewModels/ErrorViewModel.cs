@@ -1,4 +1,4 @@
-namespace WhenTheFireFades.Models.ViewModels
+namespace WhenTheFireFades.ViewModels
 {
     public class ErrorViewModel
     {

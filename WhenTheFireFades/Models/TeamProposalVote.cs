@@ -4,20 +4,25 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace WhenTheFireFades.Data.Models;
+namespace WhenTheFireFades.Models;
 
-public partial class TeamProposalVote
+public class TeamProposalVote
 {
     [Key]
     public int TeamProposalVoteId { get; set; }
 
+    [Required]
     public int TeamProposalId { get; set; }
 
+    [Required]
     public int Seat { get; set; }
 
+    [Required]
     public bool IsApproved { get; set; }
 
-    [ForeignKey("TeamProposalId")]
-    [InverseProperty("TeamProposalVotes")]
-    public virtual TeamProposal TeamProposal { get; set; } = null!;
+    [Column(TypeName = "Datetime2")]
+    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+
+    [ForeignKey(nameof(TeamProposalId))]
+    public TeamProposal TeamProposal { get; set; } = default!;
 }

@@ -4,18 +4,20 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace WhenTheFireFades.Data.Models;
+namespace WhenTheFireFades.Models;
 
-public partial class TeamProposalMember
+[Index(nameof(TeamProposalMemberId), nameof(Seat), IsUnique = true)]
+public class TeamProposalMember
 {
     [Key]
     public int TeamProposalMemberId { get; set; }
 
+    [Required]
     public int TeamProposalId { get; set; }
 
+    [Required]
     public int Seat { get; set; }
 
-    [ForeignKey("TeamProposalId")]
-    [InverseProperty("TeamProposalMembers")]
-    public virtual TeamProposal TeamProposal { get; set; } = null!;
+    [ForeignKey(nameof(TeamProposalId))]
+    public TeamProposal TeamProposal { get; set; } = default!;
 }

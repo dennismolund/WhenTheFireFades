@@ -1,32 +1,19 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using WhenTheFireFades.Models.ViewModels;
+using WhenTheFireFades.Domain.Helpers;
+using WhenTheFireFades.ViewModels;
 
 namespace WhenTheFireFades.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController(SessionHelper sessionHelper) : Controller
     {
-        private readonly ILogger<HomeController> _logger;
-
-        public HomeController(ILogger<HomeController> logger)
-        {
-            _logger = logger;
-        }
-
+        private readonly SessionHelper _sessionHelper = sessionHelper;
         public IActionResult Index()
         {
+            ViewBag.UserId = _sessionHelper.GetOrCreateTempUserId();
+            ViewBag.Nickname = _sessionHelper.GetPlayerNickname();
             return View();
         }
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
     }
 }
