@@ -35,12 +35,11 @@ public class SessionHelper(IHttpContextAccessor httpContextAccessor)
         Session?.SetInt32(TempUserIdKey, tempUserId);
     }
 
-    //public void ClearTempUserId()
-    //{
-    //    Session?.Remove(TempUserIdKey);
-    //}
+    public void ClearTempUserId()
+    {
+        Session?.Remove(TempUserIdKey);
+    }
 
-    // Nickname Management
     public string? GetPlayerNickname()
     {
         return Session?.GetString(PlayerNicknameKey);
@@ -51,10 +50,10 @@ public class SessionHelper(IHttpContextAccessor httpContextAccessor)
         Session?.SetString(PlayerNicknameKey, nickname);
     }
 
-    //public void ClearPlayerNickname()
-    //{
-    //    Session?.Remove(PlayerNicknameKey);
-    //}
+    public void ClearPlayerNickname()
+    {
+        Session?.Remove(PlayerNicknameKey);
+    }
 
     public string? GetCurrentGameCode()
     {
@@ -66,30 +65,30 @@ public class SessionHelper(IHttpContextAccessor httpContextAccessor)
         Session?.SetString(CurrentGameCodeKey, code);
     }
 
-    //public void ClearCurrentGameCode()
-    //{
-    //    Session?.Remove(CurrentGameCodeKey);
-    //}
+    public void ClearCurrentGameCode()
+    {
+        Session?.Remove(CurrentGameCodeKey);
+    }
 
-    //// Clear all session data
-    //public void ClearAllGameData()
-    //{
-    //    ClearTempUserId();
-    //    ClearPlayerNickname();
-    //    ClearCurrentGameCode();
-    //}
+    // Clear all session data
+    public void ClearAllGameData()
+    {
+        ClearTempUserId();
+        ClearPlayerNickname();
+        ClearCurrentGameCode();
+    }
 
-    //// Helper method to store complex objects (if needed)
-    //public void SetObject<T>(string key, T value)
-    //{
-    //    Session?.SetString(key, JsonSerializer.Serialize(value));
-    //}
+    // Helper method to store complex objects (if needed)
+    public void SetObject<T>(string key, T value)
+    {
+        Session?.SetString(key, JsonSerializer.Serialize(value));
+    }
 
-    //public T? GetObject<T>(string key)
-    //{
-    //    var value = Session?.GetString(key);
-    //    return value == null ? default : JsonSerializer.Deserialize<T>(value);
-    //}
+    public T? GetObject<T>(string key)
+    {
+        var value = Session?.GetString(key);
+        return value == null ? default : JsonSerializer.Deserialize<T>(value);
+    }
 
     private static int GenerateTempUserId()
     {

@@ -1,6 +1,7 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 using WhenTheFireFades.Domain.Helpers;
+using WhenTheFireFades.Models;
 using WhenTheFireFades.ViewModels;
 
 namespace WhenTheFireFades.Controllers
@@ -12,6 +13,13 @@ namespace WhenTheFireFades.Controllers
         {
             ViewBag.UserId = _sessionHelper.GetOrCreateTempUserId();
             ViewBag.Nickname = _sessionHelper.GetPlayerNickname();
+
+            var gameCode = _sessionHelper.GetCurrentGameCode();
+            if (gameCode != null)
+            {
+                return RedirectToAction(nameof(GameController.Lobby), "Game", new { code = gameCode });
+            }
+
             return View();
         }
 

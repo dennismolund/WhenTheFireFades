@@ -13,7 +13,7 @@ public interface IGamePlayerRepository
     Task<int> GetPlayerCountAsync(int gameId);
     Task AddPlayerAsync(GamePlayer player);
     Task UpdatePlayerAsync(GamePlayer player);
-    Task RemovePlayerAsync(GamePlayer player);
+    void RemovePlayer(GamePlayer player);
     Task<int> GetNextAvailableSeatAsync(int gameId);
     Task<bool> IsSeatTakenAsync(int gameId, int seat);
     Task SaveChangesAsync();

@@ -64,9 +64,9 @@ public class GamePlayerRepository(ApplicationDbContext db) : IGamePlayerReposito
         throw new NotImplementedException();
     }
 
-    public Task RemovePlayerAsync(GamePlayer player)
+    public void RemovePlayer(GamePlayer player)
     {
-        throw new NotImplementedException();
+        _db.GamePlayers.Remove(player);
     }
 
     public async Task SaveChangesAsync()

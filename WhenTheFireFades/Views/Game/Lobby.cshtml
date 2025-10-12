@@ -1,26 +1,168 @@
 ﻿@model WhenTheFireFades.Models.Game
+
 @{
-    ViewData["Title"] = "Lobby";
+    ViewData["Title"] = "Game Lobby";
 }
 
-<h2>Lobby</h2>
+<div class="container">
+    <h1>Game Lobby</h1>
+    <h2>Code: @Model.ConnectionCode</h2>
 
-<p><strong>Game Code:</strong> @Model.ConnectionCode</p>
-<p><strong>Status:</strong> @Model.Status</p>
+    <div class="row">
+        <div class="col-md-8">
+            <h3>Players (<span id="playerCount">@Model.Players.Count</span>)</h3>
+            <div id="playersList" class="list-group">
+                @foreach (var player in Model.Players)
+                {
+                    <div class="list-group-item d-flex justify-content-between align-items-center"
+                         data-player-id="@player.TempUserId">
+                        <div>
+                            <strong>@player.Nickname</strong>
+                            <span class="badge bg-secondary">Seat @player.Seat</span>
+                        </div>
+                        <div>
+                            @if (player.IsReady)
+                            {
+                                <span class="badge bg-success">Ready</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning">Not Ready</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
 
-<h3>Players</h3>
-@if (Model.Players is null || !Model.Players.Any())
-{
-    <p>No players yet. Share the code with friends.</p>
-}
-else
-{
-    <ul>
-        @foreach (var p in Model.Players.OrderBy(p => p.Seat))
-        {
-            <li>Seat @p.Seat - @p.Nickname</li>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Your Status</h5>
+                    <button id="toggleReadyBtn" class="btn btn-primary w-100 mb-2">
+                        Toggle Ready
+                    </button>
+                    <form asp-controller="game" asp-action="LeaveGameLobby" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="code" value="@Model.ConnectionCode">
+                        <button id="leaveBtn" class="btn btn-danger w-100">
+                            Leave Lobby
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <script>
+        const gameCode = '@Model.ConnectionCode';
+        const tempUserId = @ViewBag.TempUserId;
+        let isReady = false;
+
+        // Create connection to SignalR hub
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/gameLobbyHub")
+            .withAutomaticReconnect()
+            .build();
+
+        // Handle incoming player joined events
+        connection.on("PlayerJoined", function (data) {
+            console.log("Player joined:", data);
+            updatePlayersList(data.players);
+            updatePlayerCount(data.totalPlayers);
+        });
+
+        // Handle incoming player left events
+        connection.on("PlayerLeft", function (data) {
+            console.log("Player left:", data);
+            updatePlayersList(data.players);
+            updatePlayerCount(data.totalPlayers);
+        });
+
+        // Handle ready status changes
+        connection.on("PlayerReadyChanged", function (data) {
+            console.log("Player ready status changed:", data);
+            updatePlayerReadyStatus(data.tempUserId, data.isReady);
+
+            if (data.allPlayersReady) {
+                showNotification("All players are ready!");
+            }
+        });
+
+        // Start the connection
+        connection.start()
+            .then(function () {
+                console.log("Connected to SignalR hub");
+                // Join the game lobby group
+                return connection.invoke("JoinGameLobby", gameCode);
+            })
+            .catch(function (err) {
+                console.error("Error connecting to SignalR:", err);
+            });
+
+        // Handle ready button click
+        document.getElementById("toggleReadyBtn").addEventListener("click", function() {
+            isReady = !isReady;
+            connection.invoke("UpdateReadyStatus", gameCode, isReady)
+                .catch(function (err) {
+                    console.error("Error updating ready status:", err);
+                });
+        });
+
+        // Update the players list in the UI
+        function updatePlayersList(players) {
+            const playersList = document.getElementById("playersList");
+            playersList.innerHTML = "";
+
+            players.forEach(function(player) {
+                const playerDiv = document.createElement("div");
+                playerDiv.className = "list-group-item d-flex justify-content-between align-items-center";
+                playerDiv.setAttribute("data-player-id", player.tempUserId);
+
+                const readyBadge = player.isReady
+                    ? '<span class="badge bg-success">Ready</span>'
+                    : '<span class="badge bg-warning">Not Ready</span>';
+
+                playerDiv.innerHTML = `
+                    <div>
+                        <strong>${player.nickname}</strong>
+                        <span class="badge bg-secondary">Seat ${player.seat}</span>
+                    </div>
+                    <div>${readyBadge}</div>
+                `;
+
+                playersList.appendChild(playerDiv);
+            });
         }
-    </ul>
-}
 
-<!-- Later: Ready/Start buttons, join link, SignalR live updates -->
+        // Update a specific player's ready status
+        function updatePlayerReadyStatus(playerId, isReady) {
+            const playerDiv = document.querySelector(`[data-player-id="${playerId}"]`);
+            if (playerDiv) {
+                const badgeDiv = playerDiv.querySelector("div:last-child");
+                badgeDiv.innerHTML = isReady
+                    ? '<span class="badge bg-success">Ready</span>'
+                    : '<span class="badge bg-warning">Not Ready</span>';
+            }
+        }
+
+        // Update player count
+        function updatePlayerCount(count) {
+            document.getElementById("playerCount").textContent = count;
+        }
+
+        // Show notification
+        function showNotification(message) {
+            // Simple alert for now - you can make this fancier
+            alert(message);
+        }
+
+        // Clean up when leaving the page
+        window.addEventListener("beforeunload", function() {
+            connection.invoke("LeaveGameLobby", gameCode);
+        });
+    </script>
+}

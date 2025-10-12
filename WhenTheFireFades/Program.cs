@@ -4,6 +4,7 @@ using WhenTheFireFades.Data;
 using WhenTheFireFades.Data.Repositories;
 using WhenTheFireFades.Domain.Helpers;
 using WhenTheFireFades.Domain.Services;
+using WhenTheFireFades.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,7 +13,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 builder.Services.AddControllersWithViews();
-
+builder.Services.AddSignalR();
 
 builder.Services.AddDistributedMemoryCache();
 
@@ -33,6 +34,7 @@ builder.Services.AddScoped<GameService>();
 builder.Services.AddScoped<IGameRepository, GameRepository>();
 
 builder.Services.AddScoped<IGamePlayerRepository, GamePlayerRepository>();
+
 
 var app = builder.Build();
 
@@ -57,5 +59,8 @@ app.UseSession();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapHub<GameLobbyHub>("/gameLobbyHub");
+
 
 app.Run();

@@ -6,6 +6,6 @@ public interface IGameRepository
 {
     Task AddGameAsync(Game game);
     Task SaveChangesAsync();
-    Task<Game?> GetByCodeAsync(string code);
+    Task<Game?> GetByCodeWithPlayersAsync(string code);
 
 }

@@ -17,7 +17,7 @@ public class GameRepository(ApplicationDbContext db) : IGameRepository
         await _db.SaveChangesAsync();
     }
 
-    public async Task<Game?> GetByCodeAsync(string code)
+    public async Task<Game?> GetByCodeWithPlayersAsync(string code)
     {
         var game = await _db.Games
             .Include(g => g.Players)

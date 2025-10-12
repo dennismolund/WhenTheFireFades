@@ -1,8 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Globalization;
 using WhenTheFireFades.Data;
 using WhenTheFireFades.Data.Repositories;
+using WhenTheFireFades.Hubs;
 using WhenTheFireFades.Models;
 
 namespace WhenTheFireFades.Domain.Services;
@@ -11,6 +13,7 @@ public sealed class GameService(IGameRepository gameRepository, IGamePlayerRepos
 {
     private readonly IGameRepository _gameRepository = gameRepository;
     private readonly IGamePlayerRepository _gamePlayerRepository = gamePlayerRepository;
+
     public async Task<Game> CreateGameAsync()
     {
         var game = new Game
@@ -32,13 +35,13 @@ public sealed class GameService(IGameRepository gameRepository, IGamePlayerRepos
         return game;
     }
 
-    public async Task<GamePlayer> CreateGamePlayerAsync(int gameId, int creatorTempUserId, string? creatorUsername = null)
+    public async Task<GamePlayer> CreateGamePlayerAsync(Game game, int creatorTempUserId, string? creatorUsername = null)
     {
-        var nextSeat = await _gamePlayerRepository.GetNextAvailableSeatAsync(gameId);
+        var nextSeat = await _gamePlayerRepository.GetNextAvailableSeatAsync(game.GameId);
 
         var player = new GamePlayer
         {
-            GameId = gameId,
+            GameId = game.GameId,
             TempUserId = creatorTempUserId,
             Nickname = creatorUsername ?? $"Player#{creatorTempUserId}",
             Seat = nextSeat,
@@ -51,6 +54,7 @@ public sealed class GameService(IGameRepository gameRepository, IGamePlayerRepos
 
         await _gamePlayerRepository.AddPlayerAsync(player);
         await _gamePlayerRepository.SaveChangesAsync();
+
         return player;
     }
 
