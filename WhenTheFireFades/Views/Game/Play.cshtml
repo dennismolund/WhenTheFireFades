@@ -1,0 +1,276 @@
+﻿@model WhenTheFireFades.Models.Game
+@{
+    var currentPlayer = ViewBag.CurrentPlayer as WhenTheFireFades.Models.GamePlayer;
+    var currentRound = ViewBag.CurrentRound as WhenTheFireFades.Models.Round;
+    var leader = ViewBag.CurrentLeader as WhenTheFireFades.Models.GamePlayer;
+    var isLeader = currentPlayer?.Seat == leader?.Seat;
+    ViewData["Title"] = "Game In Progress";
+}
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card bg-dark text-white">
+                <div class="card-body">
+                    <h2 class="card-title">Round @currentRound?.RoundNumber</h2>
+                    <p class="card-text">
+                        <strong>Team Leader:</strong>
+                        <span class="badge bg-warning text-dark">
+                            @leader?.Nickname (Seat @leader?.Seat)
+                        </span>
+                    </p>
+                    <p class="card-text">
+                        <strong>Mission Status:</strong>
+                        Success: @Model.SuccessCount | Sabotage: @Model.SabotageCount
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Your Role Card -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header @(currentPlayer?.Role == WhenTheFireFades.Models.PlayerRole.Human ? "bg-primary" : "bg-danger") text-white">
+                    <h4>Your Role</h4>
+                </div>
+                <div class="card-body">
+                    @if (currentPlayer?.Role == WhenTheFireFades.Models.PlayerRole.Human)
+                    {
+                        <h3 class="text-primary">👤 Human</h3>
+                        <p>You are a loyal human. Your goal is to successfully complete missions and identify the shapeshifter.</p>
+                        <div class="alert alert-info">
+                            <strong>Mission:</strong> Help complete missions successfully!
+                        </div>
+                    }
+                    else
+                    {
+                        <h3 class="text-danger">👾 Shapeshifter</h3>
+                        <p>You are the shapeshifter. Your goal is to sabotage missions without being discovered.</p>
+                        <div class="alert alert-warning">
+                            <strong>Mission:</strong> Sabotage missions to win!
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Players List -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h4>Players in Game</h4>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        @foreach (var player in Model.Players.OrderBy(p => p.Seat))
+                        {
+                            <div class="list-group-item d-flex justify-content-between align-items-center @(player.Seat == leader?.Seat ? "list-group-item-warning" : "")">
+                                <div>
+                                    <strong>@player.Nickname</strong>
+                                    <span class="badge bg-secondary">Seat @player.Seat</span>
+                                    @if (player.TempUserId == ViewBag.TempUserId)
+                                    {
+                                        <span class="badge bg-info">You</span>
+                                    }
+                                    @if (player.Seat == leader?.Seat)
+                                    {
+                                        <span class="badge bg-warning text-dark">👑 Leader</span>
+                                    }
+                                </div>
+                                @if (isLeader)
+                                {
+                                    <div class="ms-3">
+                                        <button type="button" class="btn btn-outline-dark btn-sm">
+                                            Select
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Actions Area -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4>Current Phase: <span id="currentPhase">Team Selection</span></h4>
+                </div>
+                <div class="card-body">
+                    @if (currentPlayer?.Seat == leader?.Seat)
+                    {
+                        <!-- Leader's Team Selection View -->
+                        <div id="leaderView">
+                            <div class="alert alert-warning">
+                                <strong>You are the team leader!</strong> Select @currentRound?.TeamSize player(s) for this mission.
+                            </div>
+
+                            <form id="proposeTeamForm" asp-controller="Game" asp-action="ProposeTeam" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="code" value="@Model.ConnectionCode" />
+
+                                <div class="mb-3">
+                                    <h5>Select Team Members:</h5>
+                                    <div id="teamSelection" class="list-group">
+                                        @foreach (var player in Model.Players.OrderBy(p => p.Seat))
+                                        {
+                                            <label class="list-group-item d-flex align-items-center">
+                                                <input class="form-check-input me-3"
+                                                       type="checkbox"
+                                                       name="selectedSeats"
+                                                       value="@player.Seat"
+                                                       data-team-size="@currentRound?.TeamSize">
+                                                <div class="flex-grow-1">
+                                                    <strong>@player.Nickname</strong>
+                                                    <span class="badge bg-secondary">Seat @player.Seat</span>
+                                                    @if (player.TempUserId == ViewBag.TempUserId)
+                                                    {
+                                                        <span class="badge bg-info">You</span>
+                                                    }
+                                                </div>
+                                            </label>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-info" id="selectionInfo">
+                                    Selected: <strong><span id="selectedCount">0</span> / @currentRound?.TeamSize</strong>
+                                </div>
+
+                                <button type="submit" id="proposeTeamBtn" class="btn btn-success btn-lg w-100" disabled>
+                                    Propose Team
+                                </button>
+                            </form>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Non-Leader View -->
+                        <div id="nonLeaderView">
+                            <div class="alert alert-info">
+                                <strong>@leader?.Nickname</strong> is selecting the team. Please wait...
+                            </div>
+                            <div id="waitingMessage" class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Waiting...</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <!-- Team Proposal Display (shown to all after leader proposes) -->
+                <div id="teamProposalView" style="display: none;">
+                    <div class="alert alert-success">
+                        <strong id="proposerName"></strong> has proposed a team!
+                    </div>
+                        
+                    <h5>Proposed Team:</h5>
+                    <div id="proposedTeamList" class="list-group mb-3">
+                        <!-- Team members will be added here -->
+                    </div>
+
+                    <div class="alert alert-warning">
+                        Team voting will be implemented next...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <script>
+        const gameCode = '@ViewBag.GameCode';
+        const tempUserId = @ViewBag.TempUserId;
+        const currentPlayerSeat = @(ViewBag.CurrentPlayer?.Seat ?? 0);
+        const leaderSeat = @(ViewBag.CurrentLeader?.Seat ?? 0);
+        const isLeader = currentPlayerSeat === leaderSeat;
+
+        // SignalR connection
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/gamePlayHub")
+            .withAutomaticReconnect()
+            .build();
+
+        // Handle team proposal broadcast from server
+        connection.on("TeamProposed", function (data) {
+            console.log("Team proposed:", data);
+            displayProposedTeam(data);
+        });
+
+        connection.start()
+            .then(function () {
+                console.log("Connected to game play hub");
+                return connection.invoke("JoinGame", gameCode, tempUserId);
+            })
+            .catch(function (err) {
+                console.error("Error connecting:", err);
+            });
+
+        // Client-side validation for leader only
+        if (isLeader) {
+            const form = document.getElementById('proposeTeamForm');
+            const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+            const proposeBtn = document.getElementById('proposeTeamBtn');
+            const selectedCountSpan = document.getElementById('selectedCount');
+            const teamSize = parseInt(checkboxes[0]?.dataset.teamSize || 2);
+
+            function updateUI() {
+                const selected = Array.from(checkboxes).filter(cb => cb.checked);
+                selectedCountSpan.textContent = selected.length;
+                proposeBtn.disabled = selected.length !== teamSize;
+            }
+
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const selected = Array.from(checkboxes).filter(cb => cb.checked);
+
+                    // Limit selection to team size
+                    if (selected.length > teamSize) {
+                        this.checked = false;
+                    }
+
+                    updateUI();
+                });
+            });
+        }
+
+        function displayProposedTeam(data) {
+            // Hide selection views
+            const leaderView = document.getElementById('leaderView');
+            const nonLeaderView = document.getElementById('nonLeaderView');
+            if (leaderView) leaderView.style.display = 'none';
+            if (nonLeaderView) nonLeaderView.style.display = 'none';
+
+            // Show proposal view
+            const proposalView = document.getElementById('teamProposalView');
+            proposalView.style.display = 'block';
+
+            document.getElementById('proposerName').textContent = data.leaderNickname;
+
+            const teamList = document.getElementById('proposedTeamList');
+            teamList.innerHTML = '';
+
+            data.teamMembers.forEach(member => {
+                const memberDiv = document.createElement('div');
+                memberDiv.className = 'list-group-item';
+                memberDiv.innerHTML = `
+                    <strong>${member.nickname}</strong>
+                    <span class="badge bg-secondary">Seat ${member.seat}</span>
+                    ${member.tempUserId === tempUserId ? '<span class="badge bg-info">You</span>' : ''}
+                `;
+                teamList.appendChild(memberDiv);
+            });
+
+            document.getElementById('currentPhase').textContent = 'Team Proposed';
+        }
+    </script>
+}

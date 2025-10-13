@@ -7,7 +7,6 @@ public class GamePlayerRepository(ApplicationDbContext db) : IGamePlayerReposito
 {
     private readonly ApplicationDbContext _db = db;
 
-    //NOTE: Jag kanske kommer behöva ändra AddPlayerAsync till att returnera den tillagda spelaren med dess genererade ID
     public async Task AddPlayerAsync(GamePlayer player)
     {
         await _db.GamePlayers
@@ -17,7 +16,6 @@ public class GamePlayerRepository(ApplicationDbContext db) : IGamePlayerReposito
     public async Task<GamePlayer?> GetByGameAndTempUserAsync(int gameId, int tempUserId)
     {
         return await _db.GamePlayers
-            .AsNoTracking() // Detta verkar göra att entiteten inte spåras av DbContext vilket kan vara bra för read-only operationer då dem kan bli snabbare: https://learn.microsoft.com/en-us/ef/core/querying/tracking
             .SingleOrDefaultAsync(p => p.GameId == gameId && p.TempUserId == tempUserId);
     }
 

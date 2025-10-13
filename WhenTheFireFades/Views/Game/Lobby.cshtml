@@ -42,6 +42,23 @@
                     <button id="toggleReadyBtn" class="btn btn-primary w-100 mb-2">
                         Toggle Ready
                     </button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Start Game</h5>
+                    <form asp-controller="game" asp-action="StartGame" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="code" value="@Model.ConnectionCode">
+                        <button id="startBtn" class="btn btn-success w-100">
+                            Start Game
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Leave</h5>
                     <form asp-controller="game" asp-action="LeaveGameLobby" method="post">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="code" value="@Model.ConnectionCode">
@@ -52,6 +69,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 
@@ -90,6 +108,14 @@
             if (data.allPlayersReady) {
                 showNotification("All players are ready!");
             }
+        });
+
+        // Start game
+        connection.on("GameStarted", function (data) {
+            console.log("Game started!", data);
+            const redirectUrl = `/Game/Play?code=${data.code}`;
+            console.log("Redirecting to:", redirectUrl);
+            window.location.href = redirectUrl;
         });
 
         // Start the connection

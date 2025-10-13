@@ -22,7 +22,7 @@ public class Round
     public int LeaderSeat { get; set; }
 
     [Required]
-    public RoundPhase Phase { get; set; } = RoundPhase.TeamSelection;
+    public RoundStatus Status { get; set; } = RoundStatus.TeamSelection;
 
     public RoundResult? Result { get; set; } = RoundResult.Unknown;
 
