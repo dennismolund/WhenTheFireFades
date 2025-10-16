@@ -1,15 +1,24 @@
 ﻿namespace WhenTheFireFades.Hubs;
+
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.SignalR;
 using WhenTheFireFades.Data.Repositories;
 using WhenTheFireFades.Domain.Helpers;
+using WhenTheFireFades.Models;
 
-public class GameLobbyHub(
+public class GameHub(
     IGameRepository gameRepository,
     IGamePlayerRepository gamePlayerRepository,
+    IRoundRepository roundRepository,
+    ITeamProposalRepository teamProposalRepository,
+    ITeamProposalVoteRepository teamProposalVoteRepository,
     SessionHelper sessionHelper) : Hub
 {
     private readonly IGameRepository _gameRepository = gameRepository;
     private readonly IGamePlayerRepository _gamePlayerRepository = gamePlayerRepository;
+    private readonly IRoundRepository _roundRepository = roundRepository;
+    private readonly ITeamProposalRepository _teamProposalRepository = teamProposalRepository;
+    private readonly ITeamProposalVoteRepository _teamProposalVoteRepository = teamProposalVoteRepository;
     private readonly SessionHelper _sessionHelper = sessionHelper;
 
     public async Task JoinGameLobby(string gameCode)
@@ -80,6 +89,55 @@ public class GameLobbyHub(
                     allPlayersReady = game.Players.All(p => p.IsReady)
                 });
             }
+        }
+    }
+
+    public async Task JoinGame(string gameCode, int tempUserId)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, gameCode);
+        Console.WriteLine($"Player {tempUserId} joined game {gameCode}");
+    }
+
+    public async Task VoteOnTeam(string gameCode, int voterTempUserId, bool isApproved)
+    {
+        var game = await _gameRepository.GetByCodeWithPlayersAndRoundsAsync(gameCode);
+        if (game == null) return;
+        var voter = game.Players.FirstOrDefault(p => p.TempUserId == voterTempUserId);
+        if (voter == null) return;
+        var round = game.Rounds.OrderByDescending(r => r.RoundNumber).FirstOrDefault();
+        if (round == null || round.Status != RoundStatus.VoteOnTeam) return;
+
+        var teamProposal = await _teamProposalRepository.GetByRoundIdAsync(round.RoundId);
+        if (teamProposal == null) return;
+
+        var teamProposalVote = new TeamProposalVote()
+        {
+            TeamProposalId = teamProposal.TeamProposalId,
+            Seat = voter.Seat,
+            IsApproved = isApproved,
+            CreatedAtUtc = DateTime.UtcNow,
+            TeamProposal = teamProposal
+        };
+
+        await _teamProposalVoteRepository.AddTeamProposalVoteAsync(teamProposalVote);
+        await _teamProposalVoteRepository.SaveChangesAsync();
+
+        var votes = await _teamProposalVoteRepository.GetByTeamProposalAsync(teamProposal.TeamProposalId);
+        var voteCount = votes.Count;
+
+        //Ledaren behöver inte rösta.
+        if (voteCount >= game.Players.Count - 1)
+        {
+            // Har någon röstat nej så går teamet inte igenom.
+            var voteIsApproved = !votes.Any(v => !v.IsApproved);
+
+            await Clients.Group(gameCode).SendAsync("TeamVoteResult", new
+            {
+                teamProposalId = teamProposal.TeamProposalId,
+                rejectionCount = votes.Count(v => !v.IsApproved),
+                approvalCount = votes.Count(v => v.IsApproved),
+                voteIsApproved
+            });
         }
     }
 

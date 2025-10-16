@@ -6,6 +6,7 @@ using WhenTheFireFades.Data.Repositories;
 using WhenTheFireFades.Domain.Helpers;
 using WhenTheFireFades.Domain.Services;
 using WhenTheFireFades.Hubs;
+using WhenTheFireFades.Models;
 
 namespace WhenTheFireFades.Controllers;
 
@@ -14,15 +15,19 @@ public class GameController(
     IGameRepository gameRepository, 
     IGamePlayerRepository gamePlayerRepository,
     IRoundRepository roundRepository,
+    ITeamProposalRepository teamProposalRepository,
+    ITeamProposalVoteRepository teamProposalVoteRepository,
     SessionHelper sessionHelper, 
-    IHubContext<GameLobbyHub> hubContext) : Controller
+    IHubContext<GameHub> hubContext) : Controller
 {
     private readonly GameService _gameService = gameService;
     private readonly IGameRepository _gameRepository = gameRepository;
     private readonly IGamePlayerRepository _gamePlayerRepository = gamePlayerRepository;
     private readonly IRoundRepository _roundRepository = roundRepository;
+    private readonly ITeamProposalRepository _teamProposalRepository = teamProposalRepository;
+    private readonly ITeamProposalVoteRepository _teamProposalVoteRepository = teamProposalVoteRepository;
     private readonly SessionHelper _sessionHelper = sessionHelper;
-    private readonly IHubContext<GameLobbyHub> _hubContext = hubContext;
+    private readonly IHubContext<GameHub> _hubContext = hubContext;
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -165,7 +170,7 @@ public class GameController(
         {
             return NotFound();
         }
-        if (game.Status != Models.GameStatus.InProgress) //TODO: Change later when status Finished is implemented
+        if (game.Status != GameStatus.InProgress) //TODO: Change later when status Finished is implemented
         {
             return RedirectToAction(nameof(Lobby), new { code });
         }
@@ -233,6 +238,22 @@ public class GameController(
                 p.Seat
             })
             .ToList();
+
+        var teamProposal = new TeamProposal()
+        {
+            RoundId = currentRound.RoundId,
+            AttemptNumber = currentRound.TeamVoteCounter,
+            IsActive = true,
+            CreatedAtUtc = DateTime.UtcNow,
+            Round = currentRound,
+        };
+
+
+        await _teamProposalRepository.AddTeamProposalAsync(teamProposal);
+        await _teamProposalRepository.SaveChangesAsync();
+
+        await _roundRepository.UpdateRoundStatus(currentRound.RoundId, RoundStatus.VoteOnTeam);
+        await _roundRepository.SaveChangesAsync();
 
         await _hubContext.Clients.Group(code).SendAsync("TeamProposed", new
         {

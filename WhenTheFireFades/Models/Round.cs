@@ -44,6 +44,6 @@ public class Round
     [ForeignKey(nameof(GameId))]
     public Game Game { get; set; } = default!;
 
-    public ICollection<TeamProposal> TeamProposals { get; set; } = new List<TeamProposal>();
+    public TeamProposal TeamProposals { get; set; } = default!;
     public ICollection<MissionVote> MissionVotes { get; set; } = new List<MissionVote>();
 }

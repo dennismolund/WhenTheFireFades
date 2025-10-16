@@ -151,7 +151,6 @@
                     }
                     else
                     {
-                        <!-- Non-Leader View -->
                         <div id="nonLeaderView">
                             <div class="alert alert-info">
                                 <strong>@leader?.Nickname</strong> is selecting the team. Please wait...
@@ -174,10 +173,12 @@
                     <div id="proposedTeamList" class="list-group mb-3">
                         <!-- Team members will be added here -->
                     </div>
-
-                    <div class="alert alert-warning">
-                        Team voting will be implemented next...
+                    <div id="voteView">
+                        <button class="btn btn-success" id="voteApproveBtn">Approve</button>
+                        <button class="btn btn-danger" id="voteRejectBtn">Reject</button>
                     </div>
+                    <div id="voteStatus" class="mt-2 small text-muted"></div>
+
                 </div>
             </div>
         </div>
@@ -194,17 +195,47 @@
         const leaderSeat = @(ViewBag.CurrentLeader?.Seat ?? 0);
         const isLeader = currentPlayerSeat === leaderSeat;
 
-        // SignalR connection
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/gamePlayHub")
+            .withUrl("/gameHub")
             .withAutomaticReconnect()
             .build();
 
-        // Handle team proposal broadcast from server
         connection.on("TeamProposed", function (data) {
             console.log("Team proposed:", data);
             displayProposedTeam(data);
         });
+
+        connection.on("TeamVoteResult", function (data) {
+            console.log("Team vote Result:", data);
+            const voteStatus = document.getElementById('voteStatus');
+            const votes = `${data.approvalCount} Approve, ${data.rejectionCount} Reject`;
+            voteStatus.textContent = data.voteIsApproved ? `Team Approved! (${votes})` : `Team Rejected! (${votes})`;
+        });
+        
+
+        document.getElementById("voteApproveBtn").onclick = function()
+        {
+            console.log("Voted to approve");
+
+            connection.invoke("VoteOnTeam", gameCode, tempUserId, true)
+                .then(() => {
+                    document.getElementById("voteApproveBtn").disabled = true;
+                    document.getElementById("voteRejectBtn").disabled  = true;
+                    document.getElementById("voteStatus").textContent = "You voted to Approve the team.";
+                })
+                .catch(err => console.error(err.toString()));
+        }
+
+        document.getElementById("voteRejectBtn").onclick = function()
+        {
+            connection.invoke("VoteOnTeam", gameCode, tempUserId, false)
+                .then(() => {
+                    document.getElementById("voteApproveBtn").disabled = true;
+                    document.getElementById("voteRejectBtn").disabled  = true;
+                    document.getElementById("voteStatus").textContent = "You voted to Reject the team.";
+                })
+                .catch(err => console.error(err.toString()));
+        }
 
         connection.start()
             .then(function () {
@@ -215,7 +246,6 @@
                 console.error("Error connecting:", err);
             });
 
-        // Client-side validation for leader only
         if (isLeader) {
             const form = document.getElementById('proposeTeamForm');
             const checkboxes = form.querySelectorAll('input[type="checkbox"]');
@@ -233,7 +263,6 @@
                 checkbox.addEventListener('change', function() {
                     const selected = Array.from(checkboxes).filter(cb => cb.checked);
 
-                    // Limit selection to team size
                     if (selected.length > teamSize) {
                         this.checked = false;
                     }
@@ -244,13 +273,11 @@
         }
 
         function displayProposedTeam(data) {
-            // Hide selection views
             const leaderView = document.getElementById('leaderView');
             const nonLeaderView = document.getElementById('nonLeaderView');
             if (leaderView) leaderView.style.display = 'none';
             if (nonLeaderView) nonLeaderView.style.display = 'none';
 
-            // Show proposal view
             const proposalView = document.getElementById('teamProposalView');
             proposalView.style.display = 'block';
 
@@ -272,5 +299,7 @@
 
             document.getElementById('currentPhase').textContent = 'Team Proposed';
         }
+
+
     </script>
 }

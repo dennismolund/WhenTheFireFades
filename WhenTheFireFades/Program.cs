@@ -37,6 +37,10 @@ builder.Services.AddScoped<IGamePlayerRepository, GamePlayerRepository>();
 
 builder.Services.AddScoped<IRoundRepository, RoundRepository>();
 
+builder.Services.AddScoped<ITeamProposalRepository, TeamProposalRepository>();
+
+builder.Services.AddScoped<ITeamProposalVoteRepository, TeamProposalVoteRepository>();
+
 
 
 var app = builder.Build();
@@ -63,7 +67,6 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.MapHub<GameLobbyHub>("/gameLobbyHub");
-app.MapHub<GamePlayHub>("/gamePlayHub");
+app.MapHub<GameHub>("/gameHub");
 
 app.Run();
