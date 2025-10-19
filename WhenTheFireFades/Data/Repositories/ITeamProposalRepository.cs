@@ -8,5 +8,6 @@ public interface ITeamProposalRepository
     Task<TeamProposal?> GetByIdAsync(int teamProposalId);
     Task<TeamProposal?> GetByIdWithVotesAsync(int teamProposalId);
     Task<TeamProposal?> GetByRoundIdAsync(int roundId);
+    Task<TeamProposal?> GetActiveByRoundIdAsync(int roundId);
     Task SaveChangesAsync();
 }

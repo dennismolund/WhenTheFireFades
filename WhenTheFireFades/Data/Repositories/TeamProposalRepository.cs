@@ -33,6 +33,16 @@ public class TeamProposalRepository(ApplicationDbContext db) : ITeamProposalRepo
            .FirstOrDefaultAsync(tp => tp.RoundId == roundId);
     }
 
+    public async Task<TeamProposal?> GetActiveByRoundIdAsync(int roundId)
+    {
+        return await _db.TeamProposals
+       .Where(tp => tp.RoundId == roundId && tp.IsActive)
+       .Include(tp => tp.Votes)
+       .Include(tp => tp.Members)
+       .OrderByDescending(tp => tp.AttemptNumber)
+       .FirstOrDefaultAsync();
+    }
+
     public async Task SaveChangesAsync()
     {
         await _db.SaveChangesAsync();

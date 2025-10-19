@@ -124,7 +124,7 @@ public class GameHub(
         var round = game.Rounds.OrderByDescending(r => r.RoundNumber).FirstOrDefault();
         if (round == null || round.Status != RoundStatus.VoteOnTeam) return;
 
-        var teamProposal = await _teamProposalRepository.GetByRoundIdAsync(round.RoundId);
+        var teamProposal = await _teamProposalRepository.GetActiveByRoundIdAsync(round.RoundId);
         if (teamProposal == null) return;
 
         var existingVotes = await _teamProposalVoteRepository.GetByTeamProposalAsync(teamProposal.TeamProposalId);
