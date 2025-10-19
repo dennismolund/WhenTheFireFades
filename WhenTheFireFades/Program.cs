@@ -41,6 +41,8 @@ builder.Services.AddScoped<ITeamProposalRepository, TeamProposalRepository>();
 
 builder.Services.AddScoped<ITeamProposalVoteRepository, TeamProposalVoteRepository>();
 
+builder.Services.AddScoped<IMissionVoteRepository, MissionVoteRepository>();
+
 
 
 var app = builder.Build();

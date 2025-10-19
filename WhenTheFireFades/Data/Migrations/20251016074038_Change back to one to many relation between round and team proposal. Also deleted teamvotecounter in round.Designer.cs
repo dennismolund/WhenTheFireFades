@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WhenTheFireFades.Data;
 
@@ -11,9 +12,11 @@ using WhenTheFireFades.Data;
 namespace WhenTheFireFades.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251016074038_Change back to one to many relation between round and team proposal. Also deleted teamvotecounter in round")]
+    partial class ChangebacktoonetomanyrelationbetweenroundandteamproposalAlsodeletedteamvotecounterinround
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -34,9 +37,6 @@ namespace WhenTheFireFades.Migrations
                         .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
-
-                    b.Property<int>("ConsecutiveRejectedProposals")
-                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("datetime2");
@@ -126,7 +126,7 @@ namespace WhenTheFireFades.Migrations
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("IsSuccess")
+                    b.Property<bool>("IsSabotage")
                         .HasColumnType("bit");
 
                     b.Property<int>("RoundId")

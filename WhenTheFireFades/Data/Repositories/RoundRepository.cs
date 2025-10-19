@@ -24,20 +24,22 @@ public class RoundRepository(ApplicationDbContext db) : IRoundRepository
         if (round != null)
         {
             round.Status = status;
+            round.UpdatedAtUtc = DateTime.UtcNow;
         }
-    }
-
-    public async Task UpdateTeamVoteCounter(int roundId)
-    {
-        var round = await _db.Rounds.FindAsync(roundId);
-        if (round != null)
-        {
-            round.TeamVoteCounter++;
-        }   
     }
 
     public async Task SaveChangesAsync()
     {
         await _db.SaveChangesAsync();
+    }
+
+    public async Task<Round?> GetCurrentRoundSnapshot(int gameId, int roundNumber)
+    {
+        return await _db.Rounds
+            .Include(r => r.TeamProposals.Where(tp => tp.IsActive))
+                .ThenInclude(tp => tp.Votes)        
+            .Include(r => r.TeamProposals.Where(tp => tp.IsActive))
+                .ThenInclude(tp => tp.Members)   
+            .FirstOrDefaultAsync(r => r.GameId == gameId && r.RoundNumber == roundNumber);
     }
 }

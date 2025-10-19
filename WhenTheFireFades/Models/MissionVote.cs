@@ -19,7 +19,7 @@ public class MissionVote
     public int Seat { get; set; }
 
     [Required]
-    public bool IsSabotage { get; set; }
+    public bool IsSuccess { get; set; }
 
     [Column(TypeName = "datetime2")]
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;

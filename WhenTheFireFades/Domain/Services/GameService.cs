@@ -64,39 +64,51 @@ public sealed class GameService(
         return player;
     }
 
-    public async Task StartGameAsync(Game game)
+
+    private const int MinimumPlayerCount = 2; //Change to 5 later.
+
+    public async Task<Round> StartGameAsync(Game game)
     {
         if (game == null)
             throw new ArgumentException("Game not found.");
         if (game.Status != GameStatus.Lobby)
             throw new InvalidOperationException("Game is not in a state that can be started.");
 
-        //var playerCount = game.Players.Count;
-        //if (playerCount < 5)
-        //    throw new InvalidOperationException("Not enough players to start the game. Minimum is 5.");
+        var players = game.Players.ToList();
+        var playerCount = players.Count;
 
+        if(playerCount < MinimumPlayerCount)
+            throw new InvalidOperationException($"Not enough players to start the game. Minimum is {MinimumPlayerCount}.");
 
-        AssignRoles(game);
+        AssignRoles(players);
+
 
         game.Status = GameStatus.InProgress;
         game.UpdatedAtUtc = DateTime.UtcNow;
         game.RoundCounter = 1;
-        game.LeaderSeat = 1;
+        game.LeaderSeat = DetermineInitialLeader(players);
 
         await _gameRepository.SaveChangesAsync();
+
+        return await CreateRoundAsync(game, game.RoundCounter, game.LeaderSeat);
+
     }
 
-    public async Task<Round> CreateRoundAsync(int gameId, int roundNumber, int leaderSeat)
+    public async Task<Round> CreateRoundAsync(Game game, int roundNumber, int leaderSeat)
     {
+        var playerCount = game.Players.Count;
+        var teamSize = DetermineTeamSize(playerCount, roundNumber);
+
         var round = new Round
         {
-            GameId = gameId,
+            GameId = game.GameId,
             RoundNumber = roundNumber,
             LeaderSeat = leaderSeat,
-            TeamSize = 2, // TODO: Fixa sedan, bara för testning nu
+            TeamSize = teamSize,
             Status = RoundStatus.TeamSelection,
             Result = RoundResult.Unknown,
-            CreatedAtUtc = DateTime.UtcNow
+            CreatedAtUtc = DateTime.UtcNow,
+            SabotageCounter = 0,
         };
 
         await _roundRepository.AddRoundAsync(round);
@@ -106,14 +118,22 @@ public sealed class GameService(
     }
 
 
-    private void AssignRoles(Game game)
+    private void AssignRoles(List<GamePlayer> players)
     {
-        var players = game.Players.ToList();
+        var shuffled = players
+            .OrderBy(_ => _random.Next())
+            .ToList();
 
-        //var shuffled = players.OrderBy(x => _random.Next()).ToList();
+        foreach(var player in shuffled)
+        {
+            player.Role = PlayerRole.Human;
+        }
 
-        players[0].Role = PlayerRole.Shapeshifter;
-        players[1].Role = PlayerRole.Human;
+        var shapeshifterCount = DetermineShapeshifterCount(players.Count);
+        for (var i = 0; i < shapeshifterCount; i++)
+        {
+            shuffled[i].Role = PlayerRole.Shapeshifter;
+        }
     }
 
     //TODO: Need to handle max players
@@ -127,5 +147,52 @@ public sealed class GameService(
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         var random = new Random();
         return new string(Enumerable.Repeat(chars, 6).Select(s => s[random.Next(s.Length)]).ToArray());
+    }
+
+    private static int DetermineShapeshifterCount(int playerCount)
+    {
+        return playerCount switch
+        {
+            >= 10 => 4,
+            9 => 3,
+            8 => 3,
+            7 => 3,
+            6 => 2,
+            _ => 2
+        };
+    }
+
+    private static int DetermineTeamSize(int playerCount, int roundNumber)
+    {
+        var lookup = new Dictionary<int, int[]>
+        {
+            { 2, new[] { 2, 3, 2, 3, 3 } }, // För testning
+            { 5, new[] { 2, 3, 2, 3, 3 } },
+            { 6, new[] { 2, 3, 4, 3, 4 } },
+            { 7, new[] { 2, 3, 3, 4, 4 } },
+            { 8, new[] { 3, 4, 4, 5, 5 } },
+            { 9, new[] { 3, 4, 4, 5, 5 } },
+            { 10, new[] { 3, 4, 4, 5, 5 } }
+        };
+
+        if (!lookup.TryGetValue(playerCount, out var sizes))
+        {
+            throw new InvalidOperationException($"Unsupported player count: {playerCount}");
+        }
+
+        if (roundNumber < 1 || roundNumber > sizes.Length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(roundNumber), roundNumber, "Round number is out of range.");
+        }
+
+        return sizes[roundNumber - 1];
+    }
+
+    private static int DetermineInitialLeader(IReadOnlyCollection<GamePlayer> players)
+    {
+        return players
+            .OrderBy(p => p.Seat)
+            .Select(p => p.Seat)
+            .FirstOrDefault();
     }
 }

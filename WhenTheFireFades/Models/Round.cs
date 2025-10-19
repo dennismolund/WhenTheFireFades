@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WhenTheFireFades.Models;
 
-[Index(nameof(GameId), nameof(RoundNumber), IsUnique = true)] // one RoundNumber per game
+[Index(nameof(GameId), nameof(RoundNumber), IsUnique = true)]
 public class Round
 {
     [Key]
@@ -16,7 +16,7 @@ public class Round
     public int GameId { get; set; }
 
     [Required]
-    public int RoundNumber { get; set; } // 1..5
+    public int RoundNumber { get; set; }
 
     [Required]
     public int LeaderSeat { get; set; }
@@ -32,9 +32,6 @@ public class Round
     [Required]
     public int SabotageCounter { get; set; } = 0;
 
-    [Required]
-    public int TeamVoteCounter { get; set; } = 0;
-
     [Column(TypeName = "datetime2")]
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
@@ -44,6 +41,6 @@ public class Round
     [ForeignKey(nameof(GameId))]
     public Game Game { get; set; } = default!;
 
-    public TeamProposal TeamProposals { get; set; } = default!;
+    public ICollection<TeamProposal> TeamProposals { get; set; } = new List<TeamProposal>();
     public ICollection<MissionVote> MissionVotes { get; set; } = new List<MissionVote>();
 }

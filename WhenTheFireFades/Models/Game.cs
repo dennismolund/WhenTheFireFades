@@ -34,6 +34,9 @@ public class Game
     [Required]
     public int SabotageCount { get; set; } = 0;
 
+    [Required]
+    public int ConsecutiveRejectedProposals { get; set; } = 0;
+
     [Column(TypeName = "datetime2")]
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 

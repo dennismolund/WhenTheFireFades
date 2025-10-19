@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Protocol.Plugins;
 using WhenTheFireFades.Data;
 using WhenTheFireFades.Data.Repositories;
 using WhenTheFireFades.Domain.Helpers;
 using WhenTheFireFades.Domain.Services;
 using WhenTheFireFades.Hubs;
 using WhenTheFireFades.Models;
+using WhenTheFireFades.ViewModels;
 
 namespace WhenTheFireFades.Controllers;
 
@@ -143,10 +145,7 @@ public class GameController(
         }
 
         // Start the game
-        await _gameService.StartGameAsync(game);
-
-        // Create the first round
-        var round = await _gameService.CreateRoundAsync(game.GameId, 1, game.LeaderSeat);
+        var round = await _gameService.StartGameAsync(game);
 
         await _hubContext.Clients.Group(code).SendAsync("GameStarted", new 
         {
@@ -165,37 +164,74 @@ public class GameController(
             return BadRequest("Code is required.");
         code = code.Trim().ToUpperInvariant();
 
-        var game = await _gameRepository.GetByCodeWithPlayersAsync(code);
+        var game = await _gameRepository.GetByCodeWithPlayersAndRoundsAsync(code);
         if (game == null)
         {
             return NotFound();
         }
-        if (game.Status != GameStatus.InProgress) //TODO: Change later when status Finished is implemented
+        if (game.Status != GameStatus.InProgress)
         {
             return RedirectToAction(nameof(Lobby), new { code });
         }
+
         var tempUserId = _sessionHelper.GetTempUserId();
         if (tempUserId == null)
         {
             return RedirectToAction("Index", "Home");
         }
-        var player = game.Players.FirstOrDefault(p => p.TempUserId == tempUserId);
-        if (player == null)
+        var currentPlayer = game.Players.FirstOrDefault(p => p.TempUserId == tempUserId);
+        if (currentPlayer == null)
         {
             return RedirectToAction("Index", "Home");
         }
 
-        var currentRound = await _roundRepository.GetCurrentRoundByGameId(game.GameId, game.RoundCounter);
-        var currentLeader = game.Players.FirstOrDefault(p => p.Seat == game.LeaderSeat);
+        var currentRound = await _roundRepository.GetCurrentRoundSnapshot(game.GameId, game.RoundCounter)
+                ?? throw new InvalidOperationException("Round not found.");
 
-        ViewBag.TempUserId = tempUserId;
-        ViewBag.CurrentPlayer = player;
-        ViewBag.PlayerNickname = player.Nickname;
-        ViewBag.CurrentLeader = currentLeader;
-        ViewBag.CurrentRound = currentRound;
-        ViewBag.GameCode = code;
+        var currentLeader = game.Players.First(p => p.Seat == game.LeaderSeat);
 
-        return View(game);
+        var viewModel = new PlayViewModel
+        {
+            Game = game,
+            CurrentPlayer = currentPlayer,
+            CurrentRound = currentRound,
+            CurrentLeader = currentLeader
+        };
+
+        if (currentRound.Status == RoundStatus.VoteOnTeam || currentRound.Status == RoundStatus.SecretChoices)
+        {
+            var activeProposal = currentRound.TeamProposals.FirstOrDefault(tp => tp.IsActive);
+            if (activeProposal != null)
+            {
+                viewModel.ActiveTeamProposal = activeProposal;
+
+                // Get team members from proposal
+                var proposedSeats = activeProposal.Members.Select(m => m.Seat).ToList();
+                viewModel.ProposedTeamMembers = game.Players
+                    .Where(p => proposedSeats.Contains(p.Seat))
+                    .OrderBy(p => p.Seat)
+                    .ToList();
+
+                // Get votes if in voting phase
+                if (currentRound.Status == RoundStatus.VoteOnTeam)
+                {
+                    viewModel.TeamProposalVotes = activeProposal.Votes.ToList();
+                    viewModel.HasCurrentPlayerVoted = activeProposal.Votes
+                        .Any(v => v.Seat == currentPlayer.Seat);
+                }
+                // Get mission votes if in mission phase
+                else if (currentRound.Status == RoundStatus.SecretChoices)
+                {
+                    viewModel.MissionVotes = currentRound.MissionVotes.ToList();
+                    viewModel.HasCurrentPlayerVoted = currentRound.MissionVotes
+                        .Any(v => v.Seat == currentPlayer.Seat);
+                }
+            }
+        }
+
+        
+
+        return View(viewModel);
     }
 
     [HttpPost]
@@ -229,6 +265,25 @@ public class GameController(
             return RedirectToAction(nameof(Play), new { code });
         }
 
+        var teamProposal = new TeamProposal
+        {
+            RoundId = currentRound.RoundId,
+            AttemptNumber = currentRound.TeamProposals.Count + 1,
+            IsActive = true,
+            CreatedAtUtc = DateTime.UtcNow,
+            Round = currentRound,
+            Members = selectedSeats.Select(seat => new TeamProposalMember
+            {
+                Seat = seat
+            }).ToList()
+        };
+
+        await _teamProposalRepository.AddTeamProposalAsync(teamProposal);
+        await _teamProposalRepository.SaveChangesAsync();
+
+        await _roundRepository.UpdateRoundStatus(currentRound.RoundId, RoundStatus.VoteOnTeam);
+        await _roundRepository.SaveChangesAsync();
+
         var teamMembers = game.Players
             .Where(p => selectedSeats.Contains(p.Seat))
             .Select(p => new
@@ -239,22 +294,7 @@ public class GameController(
             })
             .ToList();
 
-        var teamProposal = new TeamProposal()
-        {
-            RoundId = currentRound.RoundId,
-            AttemptNumber = currentRound.TeamVoteCounter,
-            IsActive = true,
-            CreatedAtUtc = DateTime.UtcNow,
-            Round = currentRound,
-        };
-
-
-        await _teamProposalRepository.AddTeamProposalAsync(teamProposal);
-        await _teamProposalRepository.SaveChangesAsync();
-
-        await _roundRepository.UpdateRoundStatus(currentRound.RoundId, RoundStatus.VoteOnTeam);
-        await _roundRepository.SaveChangesAsync();
-
+        // Ledaren kommer även få denna uppdatering via sin egen anslutning när sidan laddas om, kan optimeras senare
         await _hubContext.Clients.Group(code).SendAsync("TeamProposed", new
         {
             leaderSeat = game.LeaderSeat,

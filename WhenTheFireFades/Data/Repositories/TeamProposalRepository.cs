@@ -24,11 +24,13 @@ public class TeamProposalRepository(ApplicationDbContext db) : ITeamProposalRepo
             .FirstOrDefaultAsync(tp => tp.TeamProposalId == teamProposalId);
     }
 
-    public Task<TeamProposal?> GetByRoundIdAsync(int roundId)
+    public async Task<TeamProposal?> GetByRoundIdAsync(int roundId)
     {
-        var teamProposal = _db.TeamProposals
-            .FirstOrDefaultAsync(tp => tp.RoundId == roundId);
-        return teamProposal;
+        return await _db.TeamProposals
+           .Include(tp => tp.Members)
+           .Include(tp => tp.Votes)
+           .OrderByDescending(tp => tp.AttemptNumber)
+           .FirstOrDefaultAsync(tp => tp.RoundId == roundId);
     }
 
     public async Task SaveChangesAsync()

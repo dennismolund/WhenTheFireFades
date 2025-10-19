@@ -34,7 +34,28 @@ public class GamePlayerRepository(ApplicationDbContext db) : IGamePlayerReposito
         var nextSeat = await _db.GamePlayers
             .Where(gp => gp.GameId == gameId).ToListAsync();
 
-        return nextSeat.Count + 1;
+        var takenSeats = await _db.GamePlayers
+            .Where(gp => gp.GameId == gameId)
+            .OrderBy(gp => gp.Seat)
+            .Select(gp => gp.Seat)
+            .ToListAsync();
+
+        var expectedSeat = 1;
+
+        foreach (var seat in takenSeats)
+        {
+            if (seat > expectedSeat)
+            {
+                break;
+            }
+
+            if (seat == expectedSeat)
+            {
+                expectedSeat++;
+            }
+        }
+
+        return expectedSeat;
     }
 
     public Task<int> GetPlayerCountAsync(int gameId)
