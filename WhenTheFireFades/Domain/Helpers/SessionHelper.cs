@@ -70,26 +70,6 @@ public class SessionHelper(IHttpContextAccessor httpContextAccessor)
         Session?.Remove(CurrentGameCodeKey);
     }
 
-    // Clear all session data
-    public void ClearAllGameData()
-    {
-        ClearTempUserId();
-        ClearPlayerNickname();
-        ClearCurrentGameCode();
-    }
-
-    // Helper method to store complex objects (if needed)
-    public void SetObject<T>(string key, T value)
-    {
-        Session?.SetString(key, JsonSerializer.Serialize(value));
-    }
-
-    public T? GetObject<T>(string key)
-    {
-        var value = Session?.GetString(key);
-        return value == null ? default : JsonSerializer.Deserialize<T>(value);
-    }
-
     private static int GenerateTempUserId()
     {
         return Random.Shared.Next(10000, 99999);

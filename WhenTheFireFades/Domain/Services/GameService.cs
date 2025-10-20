@@ -86,7 +86,7 @@ public sealed class GameService(
         game.Status = GameStatus.InProgress;
         game.UpdatedAtUtc = DateTime.UtcNow;
         game.RoundCounter = 1;
-        game.LeaderSeat = DetermineInitialLeader(players);
+        game.LeaderSeat = 1;
 
         await _gameRepository.SaveChangesAsync();
 
@@ -158,7 +158,8 @@ public sealed class GameService(
             8 => 3,
             7 => 3,
             6 => 2,
-            _ => 2
+            5 => 2,
+            _ => 1
         };
     }
 
@@ -166,7 +167,9 @@ public sealed class GameService(
     {
         var lookup = new Dictionary<int, int[]>
         {
-            { 2, new[] { 2, 3, 2, 3, 3 } }, // För testning
+            { 2, new[] { 2, 2, 2, 2, 2 } }, // För testning
+            { 3, new[] { 2, 3, 2, 3, 3 } }, // För testning
+            { 4, new[] { 2, 3, 2, 3, 3 } }, // För testning
             { 5, new[] { 2, 3, 2, 3, 3 } },
             { 6, new[] { 2, 3, 4, 3, 4 } },
             { 7, new[] { 2, 3, 3, 4, 4 } },
@@ -186,13 +189,5 @@ public sealed class GameService(
         }
 
         return sizes[roundNumber - 1];
-    }
-
-    private static int DetermineInitialLeader(IReadOnlyCollection<GamePlayer> players)
-    {
-        return players
-            .OrderBy(p => p.Seat)
-            .Select(p => p.Seat)
-            .FirstOrDefault();
     }
 }

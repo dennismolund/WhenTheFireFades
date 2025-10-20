@@ -367,6 +367,11 @@
             .withAutomaticReconnect()
             .build();
 
+        connection.on("NewLeaderSelected", function (data) {
+            console.log("New leader selected:", data);
+            showLeaderChange(data);
+        });
+
         connection.on("TeamProposed", function (data) {
             console.log("Team proposed, reloading...");
             window.location.reload();
@@ -382,6 +387,7 @@
             showVoteResult(data);
         });
 
+
         connection.on("MissionStarted", function (data) {
             console.log("Mission has started, reloading...");
             window.location.reload();
@@ -395,6 +401,19 @@
                 const currentCount = parseInt(voteCountSpan.textContent);
                 voteCountSpan.textContent = currentCount + 1;
             }
+        });
+
+        //Förstå hur jag ska starta denna efter resultatet är visat.
+        connection.on("StartNextRound", function(data){
+            console.log("Starting next round, reloading...");
+            setTimeout(() => window.location.reload(), 3000);
+
+        });
+        
+
+        connection.on("GameEnded", function (data) {
+            console.log("Game ended:", data);
+            showGameEnd(data);
         });
         
         connection.start()
@@ -512,17 +531,10 @@
 
             // Reload after showing result
             setTimeout(() => window.location.reload(), 3000);
+
         }
 
-        connection.on("NewLeaderSelected", function (data) {
-            console.log("New leader selected:", data);
-            showLeaderChange(data);
-        });
-
-        connection.on("GameEnded", function (data) {
-            console.log("Game ended:", data);
-            showGameEnd(data);
-        });
+        
 
         function showVoteResult(data) {
             const votingView = document.getElementById('teamVotingView');

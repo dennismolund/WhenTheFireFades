@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 using System.Threading.Tasks;
 using WhenTheFireFades.Data.Repositories;
 using WhenTheFireFades.Domain.Helpers;
+using WhenTheFireFades.Domain.Services;
 using WhenTheFireFades.Models;
 
 public class GameHub(
@@ -14,6 +15,7 @@ public class GameHub(
     ITeamProposalRepository teamProposalRepository,
     ITeamProposalVoteRepository teamProposalVoteRepository,
     IMissionVoteRepository missionVoteRepository,
+    GameService gameService,
     SessionHelper sessionHelper) : Hub
 {
     private readonly IGameRepository _gameRepository = gameRepository;
@@ -22,6 +24,7 @@ public class GameHub(
     private readonly ITeamProposalRepository _teamProposalRepository = teamProposalRepository;
     private readonly ITeamProposalVoteRepository _teamProposalVoteRepository = teamProposalVoteRepository;
     private readonly IMissionVoteRepository _missionVoteRepository = missionVoteRepository;
+    private readonly GameService _gameService = gameService;
     private readonly SessionHelper _sessionHelper = sessionHelper;
 
     public async Task JoinGameLobby(string gameCode)
@@ -46,34 +49,6 @@ public class GameHub(
             });
         }
     }
-
-    public async Task LeaveGameLobby(string gameCode)
-    {
-        await Groups.RemoveFromGroupAsync(Context.ConnectionId, gameCode);
-        var tempUserId = _sessionHelper.GetTempUserId();
-        if (tempUserId == null)
-        {
-            return;
-        }
-        var game = await _gameRepository.GetByCodeWithPlayersAsync(gameCode);
-        if (game != null)
-        {
-            var player = game.Players.FirstOrDefault(p => p.TempUserId == tempUserId.Value);
-            if (player != null)
-            {
-                player.IsConnected = false;
-                player.UpdatedAtUtc = DateTime.UtcNow;
-                await _gamePlayerRepository.SaveChangesAsync();
-                await Clients.Group(gameCode).SendAsync("PlayerLeft", new
-                {
-                    tempUserId = player.TempUserId,
-                    nickname = player.Nickname,
-                    totalPlayers = game.Players.Count
-                });
-            }
-        }
-    }
-
     public async Task UpdateReadyStatus(string gameCode, bool isReady)
     {
         var tempUserId = _sessionHelper.GetTempUserId();
@@ -206,7 +181,7 @@ public class GameHub(
             return;
         }
 
-        game.LeaderSeat = (game.LeaderSeat == game.Players.Count) ? 1 : game.LeaderSeat + 1;
+        game.LeaderSeat = GetNewLeaderSet(game);
         game.UpdatedAtUtc = DateTime.UtcNow;
 
         round.Status = RoundStatus.TeamSelection;
@@ -229,6 +204,10 @@ public class GameHub(
         });
     }
 
+    private int GetNewLeaderSet(Game game)
+    {
+        return (game.LeaderSeat == game.Players.Count) ? 1 : game.LeaderSeat + 1;
+    }
 
     private async Task HandleTeamApproved(Game game, Round round, TeamProposal teamProposal, string gameCode)
     {
@@ -303,13 +282,6 @@ public class GameHub(
             teamProposal.IsActive = false;
             await _teamProposalRepository.SaveChangesAsync();
 
-            await Clients.Group(gameCode).SendAsync("MissionVoteResult", new
-            {
-                roundNumber = round.RoundNumber,
-                successVotes,
-                failVotes
-            });
-
             if (voteIsSuccessful)
             {
                 await HandleVoteSuccessful(game, round, gameCode);
@@ -318,8 +290,32 @@ public class GameHub(
             {
                 await HandleVoteSabotaged(game, round, gameCode);
             }
-        }
 
+            await Clients.Group(gameCode).SendAsync("MissionVoteResult", new
+            {
+                roundNumber = round.RoundNumber,
+                successVotes,
+                failVotes
+            });
+
+            await StartNextRound(gameCode);
+        }
+    }
+
+    public async Task StartNextRound(string gameCode)
+        {
+        var game = await _gameRepository.GetByCodeWithPlayersAndRoundsAsync(gameCode);
+        if (game == null) return;
+        game.RoundCounter++;
+        game.LeaderSeat = GetNewLeaderSet(game);
+        await _gameService.CreateRoundAsync(game, game.RoundCounter, game.LeaderSeat);
+        await _gamePlayerRepository.SaveChangesAsync();
+
+        await Clients.Group(gameCode).SendAsync("StartNextRound", new
+        {
+            roundNumber = game.RoundCounter,
+            leaderSeat = game.LeaderSeat
+        });
     }
 
     private async Task HandleVoteSabotaged(Game game, Round round, string gameCode)
@@ -349,7 +345,6 @@ public class GameHub(
             });
             return;
         }
-
     }
 
     private async Task HandleVoteSuccessful(Game game, Round round, string gameCode)
