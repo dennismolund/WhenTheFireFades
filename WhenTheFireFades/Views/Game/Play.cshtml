@@ -41,11 +41,11 @@
         <!-- Your Role Card -->
         <div class="col-md-6">
             <div class="card mb-4">
-                <div class="card-header @(Model.CurrentPlayer?.Role == WhenTheFireFades.Models.PlayerRole.Human ? "bg-primary" : "bg-danger") text-white">
+                <div class="card-header @(Model.CurrentPlayer?.Role == Domain.Enums.PlayerRole.Human ? "bg-primary" : "bg-danger") text-white">
                     <h4>Your Role</h4>
                 </div>
                 <div class="card-body">
-                    @if (Model.CurrentPlayer?.Role == WhenTheFireFades.Models.PlayerRole.Human)
+                    @if (Model.CurrentPlayer?.Role == Domain.Enums.PlayerRole.Human)
                     {
                         <h3 class="text-primary">👤 Human</h3>
                         <p>You are a loyal human. Your goal is to successfully complete missions and identify the shapeshifter.</p>
@@ -293,7 +293,7 @@
                                         <button class="btn btn-success btn-lg" id="voteSuccessBtn">
                                             Gather Wood (Success)
                                         </button>
-                                        @if (Model.CurrentPlayer.Role == PlayerRole.Shapeshifter)
+                                        @if (Model.CurrentPlayer.Role == Domain.Enums.PlayerRole.Shapeshifter)
                                         {
                                             <button class="btn btn-danger btn-lg" id="voteSabotageBtn">
                                                 Sabotage Mission

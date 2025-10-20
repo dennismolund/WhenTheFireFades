@@ -1,15 +1,18 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using WhenTheFireFades.Data;
-using WhenTheFireFades.Data.Repositories;
+//using WhenTheFireFades.Data;
+//using WhenTheFireFades.Data.Repositories;
 using WhenTheFireFades.Domain.Helpers;
-using WhenTheFireFades.Domain.Services;
+//using WhenTheFireFades.Domain.Services;
 using WhenTheFireFades.Hubs;
+using Infrastructure.Persistence;
+using Application.Interfaces;
+using Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+builder.Services.AddDbContext<Infrastructure.Persistence.ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 builder.Services.AddControllersWithViews();

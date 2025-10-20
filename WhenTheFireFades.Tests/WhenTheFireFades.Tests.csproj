@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\WhenTheFireFades\WhenTheFireFades.csproj" />
+    <ProjectReference Include="..\WhenTheFireFades\Web.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-﻿using WhenTheFireFades.Models;
+﻿using Domain.Entities;
 
 namespace WhenTheFireFades.ViewModels;
 

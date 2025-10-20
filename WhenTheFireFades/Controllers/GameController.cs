@@ -1,13 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Application.Interfaces;
+using Application.Services;
+using Domain.Entities;
+using Domain.Enums;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
-using NuGet.Protocol.Plugins;
-using WhenTheFireFades.Data;
-using WhenTheFireFades.Data.Repositories;
+
 using WhenTheFireFades.Domain.Helpers;
-using WhenTheFireFades.Domain.Services;
 using WhenTheFireFades.Hubs;
-using WhenTheFireFades.Models;
 using WhenTheFireFades.ViewModels;
 
 namespace WhenTheFireFades.Controllers;

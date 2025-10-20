@@ -1,4 +1,5 @@
-﻿using WhenTheFireFades.Models;
+﻿using Domain.Entities;
+using Domain.Enums;
 
 namespace WhenTheFireFades.ViewModels;
 

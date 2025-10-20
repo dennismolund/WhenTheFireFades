@@ -1,12 +1,16 @@
 ﻿namespace WhenTheFireFades.Hubs;
 
+using Application.Interfaces;
+using Application.Services;
+using global::Domain.Entities;
+using global::Domain.Enums;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.SignalR;
 using System.Threading.Tasks;
-using WhenTheFireFades.Data.Repositories;
+//using WhenTheFireFades.Data.Repositories;
 using WhenTheFireFades.Domain.Helpers;
-using WhenTheFireFades.Domain.Services;
-using WhenTheFireFades.Models;
+//using WhenTheFireFades.Domain.Services;
+//using WhenTheFireFades.Models;
 
 public class GameHub(
     IGameRepository gameRepository,
