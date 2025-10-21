@@ -15,7 +15,7 @@ public class GameHub(
     ITeamProposalRepository teamProposalRepository,
     ITeamProposalVoteRepository teamProposalVoteRepository,
     IMissionVoteRepository missionVoteRepository,
-    GameOrchestrator gameService,
+    GameOrchestrator gameOrchestrator,
     SessionHelper sessionHelper) : Hub
 {
     private readonly IGameRepository _gameRepository = gameRepository;
@@ -24,7 +24,7 @@ public class GameHub(
     private readonly ITeamProposalRepository _teamProposalRepository = teamProposalRepository;
     private readonly ITeamProposalVoteRepository _teamProposalVoteRepository = teamProposalVoteRepository;
     private readonly IMissionVoteRepository _missionVoteRepository = missionVoteRepository;
-    private readonly GameOrchestrator _gameService = gameService;
+    private readonly GameOrchestrator _gameOrchestrator = gameOrchestrator;
     private readonly SessionHelper _sessionHelper = sessionHelper;
 
     public async Task JoinGameLobby(string gameCode)
@@ -308,7 +308,7 @@ public class GameHub(
         if (game == null) return;
         game.RoundCounter++;
         game.LeaderSeat = GetNewLeaderSet(game);
-        await _gameService.CreateRoundAsync(game, game.RoundCounter, game.LeaderSeat);
+        await _gameOrchestrator.CreateRoundAsync(game, game.RoundCounter, game.LeaderSeat);
         await _gamePlayerRepository.SaveChangesAsync();
 
         await Clients.Group(gameCode).SendAsync("StartNextRound", new

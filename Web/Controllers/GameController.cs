@@ -11,7 +11,7 @@ using Web.ViewModels;
 namespace Web.Controllers;
 
 public class GameController(
-    GameOrchestrator gameService, 
+    GameOrchestrator gameOrchestrator, 
     IGameRepository gameRepository, 
     IGamePlayerRepository gamePlayerRepository,
     IRoundRepository roundRepository,
@@ -20,7 +20,7 @@ public class GameController(
     SessionHelper sessionHelper, 
     IHubContext<GameHub> hubContext) : Controller
 {
-    private readonly GameOrchestrator _gameService = gameService;
+    private readonly GameOrchestrator _gameOrchestrator = gameOrchestrator;
     private readonly IGameRepository _gameRepository = gameRepository;
     private readonly IGamePlayerRepository _gamePlayerRepository = gamePlayerRepository;
     private readonly IRoundRepository _roundRepository = roundRepository;
@@ -35,8 +35,8 @@ public class GameController(
     {
         var tempUserId = _sessionHelper.GetOrCreateTempUserId();
 
-        var game = await _gameService.CreateGameAsync();
-        var gamePlayer = await _gameService.CreateGamePlayerAsync(game, tempUserId);
+        var game = await _gameOrchestrator.CreateGameAsync();
+        var gamePlayer = await _gameOrchestrator.CreateGamePlayerAsync(game, tempUserId);
 
         _sessionHelper.SetCurrentGameCode(game.ConnectionCode);
         return RedirectToAction(nameof(Lobby), new { code = game.ConnectionCode });
@@ -61,7 +61,7 @@ public class GameController(
 
         if (existingPlayer == null)
         {
-            var gamePlayer = await _gameService.CreateGamePlayerAsync(game, tempUserId);
+            var gamePlayer = await _gameOrchestrator.CreateGamePlayerAsync(game, tempUserId);
 
             game = await _gameRepository.GetByCodeWithPlayersAsync(code);
         }
@@ -143,7 +143,7 @@ public class GameController(
         }
 
         // Start the game
-        var round = await _gameService.StartGameAsync(game);
+        var round = await _gameOrchestrator.StartGameAsync(game);
 
         await _hubContext.Clients.Group(code).SendAsync("GameStarted", new 
         {
