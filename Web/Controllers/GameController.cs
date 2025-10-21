@@ -11,7 +11,7 @@ using Web.ViewModels;
 namespace Web.Controllers;
 
 public class GameController(
-    GameService gameService, 
+    GameOrchestrator gameService, 
     IGameRepository gameRepository, 
     IGamePlayerRepository gamePlayerRepository,
     IRoundRepository roundRepository,
@@ -20,7 +20,7 @@ public class GameController(
     SessionHelper sessionHelper, 
     IHubContext<GameHub> hubContext) : Controller
 {
-    private readonly GameService _gameService = gameService;
+    private readonly GameOrchestrator _gameService = gameService;
     private readonly IGameRepository _gameRepository = gameRepository;
     private readonly IGamePlayerRepository _gamePlayerRepository = gamePlayerRepository;
     private readonly IRoundRepository _roundRepository = roundRepository;

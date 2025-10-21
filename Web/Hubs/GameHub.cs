@@ -2,9 +2,8 @@
 
 using Application.Interfaces;
 using Application.Services;
-using global::Domain.Entities;  
-using global::Domain.Enums;
-using Microsoft.AspNetCore.Http.HttpResults;
+using Domain.Entities;  
+using Domain.Enums;
 using Microsoft.AspNetCore.SignalR;
 using System.Threading.Tasks;
 using Web.Helpers;
@@ -16,7 +15,7 @@ public class GameHub(
     ITeamProposalRepository teamProposalRepository,
     ITeamProposalVoteRepository teamProposalVoteRepository,
     IMissionVoteRepository missionVoteRepository,
-    GameService gameService,
+    GameOrchestrator gameService,
     SessionHelper sessionHelper) : Hub
 {
     private readonly IGameRepository _gameRepository = gameRepository;
@@ -25,7 +24,7 @@ public class GameHub(
     private readonly ITeamProposalRepository _teamProposalRepository = teamProposalRepository;
     private readonly ITeamProposalVoteRepository _teamProposalVoteRepository = teamProposalVoteRepository;
     private readonly IMissionVoteRepository _missionVoteRepository = missionVoteRepository;
-    private readonly GameService _gameService = gameService;
+    private readonly GameOrchestrator _gameService = gameService;
     private readonly SessionHelper _sessionHelper = sessionHelper;
 
     public async Task JoinGameLobby(string gameCode)

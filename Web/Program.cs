@@ -1,9 +1,10 @@
+using Application.Features.GamePlayers;
+using Application.Features.Games;
+using Application.Features.Rounds;
 using Application.Interfaces;
 using Application.Services;
 using Infrastructure.Persistence;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System;
 using Web.Helpers;
 using Web.Hubs;
 
@@ -34,7 +35,15 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<SessionHelper>();
 
-builder.Services.AddScoped<GameService>();
+builder.Services.AddScoped<CreateGameFeature>();
+
+builder.Services.AddScoped<CreateGamePlayerFeature>();
+
+builder.Services.AddScoped<StartGameFeature>();
+
+builder.Services.AddScoped<CreateRoundFeature>();
+
+builder.Services.AddScoped<GameOrchestrator>();
 
 builder.Services.AddScoped<IGameRepository, GameRepository>();
 
