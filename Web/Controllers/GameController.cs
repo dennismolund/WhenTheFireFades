@@ -52,11 +52,14 @@ public class GameController(
         }
 
         var tempUserId = sessionHelper.GetOrCreateTempUserId();
-        var existingPlayer = game.Players.FirstOrDefault(p => p.TempUserId == tempUserId);
+        var authenticatedUserId = sessionHelper.GetAuthenticatedUserId();
+        var authenticatedName = sessionHelper.GetAuthenticatedUserName();        
+        
+        var existingPlayer = game.Players.FirstOrDefault(p => p.TempUserId == tempUserId || p.UserId == authenticatedUserId);
         
         if (existingPlayer == null)
         {
-            await gameOrchestrator.CreateGamePlayerAsync(game, tempUserId);
+            await gameOrchestrator.CreateGamePlayerAsync(game, tempUserId, authenticatedName, authenticatedUserId);
             game = await gameRepository.GetByCodeWithPlayersAsync(code);
         }
 
