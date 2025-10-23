@@ -1,42 +1,31 @@
 using Application.Interfaces;
 using Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
 using Web.Helpers;
-
-using Web.ViewModels;
 
 namespace Web.Controllers;
 
-public class HomeController(SessionHelper sessionHelper, IGameRepository gameRepository) : Controller
+public class HomeController(
+    SessionHelper sessionHelper, 
+    IGameRepository gameRepository) : Controller
 {
-    private readonly SessionHelper _sessionHelper = sessionHelper;
-    private readonly IGameRepository _gameRepository = gameRepository;
     public async Task<IActionResult> Index()
     {
-        ViewBag.UserId = _sessionHelper.GetOrCreateTempUserId();
-        ViewBag.Nickname = _sessionHelper.GetPlayerNickname();
+        ViewBag.UserId = sessionHelper.GetOrCreateTempUserId();
+        ViewBag.Nickname = sessionHelper.GetPlayerNickname();
 
-        var gameCode = _sessionHelper.GetCurrentGameCode();
-        if (gameCode != null)
-        {
-            var game = await _gameRepository.GetByCodeAsync(gameCode);
-            if (game == null)
-            {
-                _sessionHelper.ClearCurrentGameCode();
-                return View();
-            }
-
+        var gameCode = sessionHelper.GetCurrentGameCode();
+        if (gameCode == null) return View();
+        var game = await gameRepository.GetByCodeAsync(gameCode);
+        if (game != null)
             return game.Status switch
             {
                 GameStatus.Lobby => RedirectToAction(nameof(GameController.Lobby), "Game", new { code = gameCode }),
-                GameStatus.InProgress => RedirectToAction(nameof(GameController.Play), "Game", new { code = gameCode }),
-                GameStatus.Finished => View(),
+                GameStatus.InProgress => RedirectToAction(nameof(GameController.Play), "Game",
+                    new { code = gameCode }),
                 _ => View(),
             };
-
-        }
+        sessionHelper.ClearCurrentGameCode();
         return View();
-
     }
 }

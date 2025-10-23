@@ -12,7 +12,7 @@ public sealed class CreateGamePlayerFeature(IGamePlayerRepository gamePlayerRepo
 {
     private readonly IGamePlayerRepository _gamePlayerRepository = gamePlayerRepository;
 
-    public async Task<GamePlayer> ExecuteAsync(Game game, int creatorTempUserId, string? creatorUsername = null)
+    public async Task<GamePlayer> ExecuteAsync(Game game, int creatorTempUserId, string? creatorUsername = null, string? userId = null)
     {
         var nextSeat = await _gamePlayerRepository.GetNextAvailableSeatAsync(game.GameId);
 
@@ -20,6 +20,7 @@ public sealed class CreateGamePlayerFeature(IGamePlayerRepository gamePlayerRepo
         {
             GameId = game.GameId,
             TempUserId = creatorTempUserId,
+            UserId = userId,
             Nickname = creatorUsername ?? $"Player#{creatorTempUserId}",
             Seat = nextSeat,
             Role = PlayerRole.Human,

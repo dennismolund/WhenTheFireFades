@@ -23,41 +23,24 @@ public sealed class GameOrchestrator(
     private readonly IGameRepository _gameRepository = gameRepository;
     private readonly IGamePlayerRepository _gamePlayerRepository = gamePlayerRepository;
     private readonly IRoundRepository _roundRepository = roundRepository;
-    private readonly CreateGameFeature _createGameFeature = createGameFeature;
-    private readonly CreateGamePlayerFeature _createGamePlayerFeature = createGamePlayerFeature;
-    private readonly StartGameFeature _startGameFeature = startGameFeature;
-    private readonly CreateRoundFeature _createRoundFeature = createRoundFeature;
 
     public async Task<Game> CreateGameAsync()
     {
-        return await _createGameFeature.ExecuteAsync();
+        return await createGameFeature.ExecuteAsync();
     }
 
-    public async Task<GamePlayer> CreateGamePlayerAsync(Game game, int creatorTempUserId, string? creatorUsername = null)
+    public async Task<GamePlayer> CreateGamePlayerAsync(Game game, int creatorTempUserId, string? creatorUsername = null, string? userId = null)
     {
-        return await _createGamePlayerFeature.ExecuteAsync(game, creatorTempUserId, creatorUsername);
+        return await createGamePlayerFeature.ExecuteAsync(game, creatorTempUserId, creatorUsername, userId);
     }
-
 
     public async Task<Round> StartGameAsync(Game game)
     {
-
-        return await _startGameFeature.ExecuteAsync(game);
-
+        return await startGameFeature.ExecuteAsync(game);
     }
 
     public async Task<Round> CreateRoundAsync(Game game, int roundNumber, int leaderSeat)
     {
-        return await _createRoundFeature.ExecuteAsync(game, roundNumber, leaderSeat);
+        return await createRoundFeature.ExecuteAsync(game, roundNumber, leaderSeat);
     }
-
-    //TODO: Need to handle max players
-    //public async Task<int> NextAvailableSeat(int gameId)
-    //{
-    //    return await _gamePlayerRepository.GetNextAvailableSeatAsync(gameId);
-    //}
-
-
-
-    
 }

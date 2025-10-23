@@ -3,6 +3,7 @@ using Application.Features.Games;
 using Application.Features.Rounds;
 using Application.Interfaces;
 using Application.Services;
+using Infrastructure.Identity;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Web.Helpers;
@@ -18,6 +19,15 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)
         ));
 
+builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
+    {
+        options.SignIn.RequireConfirmedAccount = false;
+        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequireUppercase = false;
+        options.Password.RequireDigit = false;
+    })
+    .AddEntityFrameworkStores<ApplicationDbContext>();
+
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
 
@@ -30,6 +40,8 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
     options.Cookie.SameSite = SameSiteMode.Lax;
 });
+
+builder.Services.AddRazorPages();
 
 builder.Services.AddHttpContextAccessor();
 
@@ -74,10 +86,12 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseSession();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseSession();
+app.MapRazorPages();
 
 app.MapControllerRoute(
     name: "default",

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using System.Text.Json;
 
 namespace Web.Helpers;
@@ -40,7 +41,7 @@ public class SessionHelper(IHttpContextAccessor httpContextAccessor)
         Session?.Remove(TempUserIdKey);
     }
 
-    public string? GetPlayerNickname()
+    public string? GetPlayerNickname()      
     {
         return Session?.GetString(PlayerNicknameKey);
     }
@@ -68,6 +69,17 @@ public class SessionHelper(IHttpContextAccessor httpContextAccessor)
     public void ClearCurrentGameCode()
     {
         Session?.Remove(CurrentGameCodeKey);
+    }
+    
+    public string? GetAuthenticatedUserId()
+    {
+        return _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+    }
+
+    public string? GetAuthenticatedUserName()
+    {
+        var user = _httpContextAccessor.HttpContext?.User;
+        return user?.Identity?.IsAuthenticated == true ? user.Identity?.Name : null;
     }
 
     private static int GenerateTempUserId()

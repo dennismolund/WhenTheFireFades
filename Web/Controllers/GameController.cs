@@ -16,29 +16,20 @@ public class GameController(
     IGamePlayerRepository gamePlayerRepository,
     IRoundRepository roundRepository,
     ITeamProposalRepository teamProposalRepository,
-    ITeamProposalVoteRepository teamProposalVoteRepository,
     SessionHelper sessionHelper, 
     IHubContext<GameHub> hubContext) : Controller
 {
-    private readonly GameOrchestrator _gameOrchestrator = gameOrchestrator;
-    private readonly IGameRepository _gameRepository = gameRepository;
-    private readonly IGamePlayerRepository _gamePlayerRepository = gamePlayerRepository;
-    private readonly IRoundRepository _roundRepository = roundRepository;
-    private readonly ITeamProposalRepository _teamProposalRepository = teamProposalRepository;
-    private readonly ITeamProposalVoteRepository _teamProposalVoteRepository = teamProposalVoteRepository;
-    private readonly SessionHelper _sessionHelper = sessionHelper;
-    private readonly IHubContext<GameHub> _hubContext = hubContext;
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create()
     {
-        var tempUserId = _sessionHelper.GetOrCreateTempUserId();
+        var tempUserId = sessionHelper.GetOrCreateTempUserId();
 
-        var game = await _gameOrchestrator.CreateGameAsync();
-        var gamePlayer = await _gameOrchestrator.CreateGamePlayerAsync(game, tempUserId);
+        var game = await gameOrchestrator.CreateGameAsync();
+        var gamePlayer = await gameOrchestrator.CreateGamePlayerAsync(game, tempUserId);
 
-        _sessionHelper.SetCurrentGameCode(game.ConnectionCode);
+        sessionHelper.SetCurrentGameCode(game.ConnectionCode);
         return RedirectToAction(nameof(Lobby), new { code = game.ConnectionCode });
     }
     
@@ -50,24 +41,24 @@ public class GameController(
 
         code = code.Trim().ToUpperInvariant();
 
-        var game = await _gameRepository.GetByCodeWithPlayersAsync(code);
+        var game = await gameRepository.GetByCodeWithPlayersAsync(code);
         if (game == null)
         {
             return NotFound();
         }
 
-        var tempUserId = _sessionHelper.GetOrCreateTempUserId();
+        var tempUserId = sessionHelper.GetOrCreateTempUserId();
         var existingPlayer = game.Players.FirstOrDefault(p => p.TempUserId == tempUserId);
 
         if (existingPlayer == null)
         {
-            var gamePlayer = await _gameOrchestrator.CreateGamePlayerAsync(game, tempUserId);
+            var gamePlayer = await gameOrchestrator.CreateGamePlayerAsync(game, tempUserId);
 
-            game = await _gameRepository.GetByCodeWithPlayersAsync(code);
+            game = await gameRepository.GetByCodeWithPlayersAsync(code);
         }
 
         ViewBag.TempUserId = tempUserId;
-        ViewBag.PlayerNickname = _sessionHelper.GetPlayerNickname();
+        ViewBag.PlayerNickname = sessionHelper.GetPlayerNickname();
         ViewBag.GameCode = code;
 
         return View(game);
@@ -82,13 +73,13 @@ public class GameController(
 
         code = code.Trim().ToUpperInvariant();
 
-        var game = await _gameRepository.GetByCodeWithPlayersAsync(code);
+        var game = await gameRepository.GetByCodeWithPlayersAsync(code);
         if (game == null)
         {
             return NotFound();
         }
 
-        var tempUserId = _sessionHelper.GetTempUserId();
+        var tempUserId = sessionHelper.GetTempUserId();
         if (tempUserId == null)
         {
             return RedirectToAction("Index", "Home");
@@ -97,12 +88,12 @@ public class GameController(
         var player = game.Players.FirstOrDefault(p => p.TempUserId == tempUserId);
         if (player != null)
         {
-            _gamePlayerRepository.RemovePlayer(player);
-            await _gamePlayerRepository.SaveChangesAsync();
+            gamePlayerRepository.RemovePlayer(player);
+            await gamePlayerRepository.SaveChangesAsync();
 
-            game = await _gameRepository.GetByCodeWithPlayersAsync(code);
+            game = await gameRepository.GetByCodeWithPlayersAsync(code);
 
-            await _hubContext.Clients.Group(code).SendAsync("PlayerLeft", new
+            await hubContext.Clients.Group(code).SendAsync("PlayerLeft", new
             {
                 leftUserId = tempUserId,
                 players = game.Players.Select(p => new
@@ -117,7 +108,7 @@ public class GameController(
             });
         }
         
-        _sessionHelper.ClearCurrentGameCode();
+        sessionHelper.ClearCurrentGameCode();
         return RedirectToAction("Index", "Home");
     }
 
@@ -130,22 +121,22 @@ public class GameController(
 
         code = code.Trim().ToUpperInvariant();
 
-        var game = await _gameRepository.GetByCodeWithPlayersAsync(code);
+        var game = await gameRepository.GetByCodeWithPlayersAsync(code);
         if (game == null)
         {
             return NotFound();
         }
 
-        var tempUserId = _sessionHelper.GetTempUserId();
+        var tempUserId = sessionHelper.GetTempUserId();
         if (tempUserId == null)
         {
             return RedirectToAction("Index", "Home");
         }
 
         // Start the game
-        var round = await _gameOrchestrator.StartGameAsync(game);
+        var round = await gameOrchestrator.StartGameAsync(game);
 
-        await _hubContext.Clients.Group(code).SendAsync("GameStarted", new 
+        await hubContext.Clients.Group(code).SendAsync("GameStarted", new 
         {
             code,
             roundNumber = game.RoundCounter,
@@ -162,7 +153,7 @@ public class GameController(
             return BadRequest("Code is required.");
         code = code.Trim().ToUpperInvariant();
 
-        var game = await _gameRepository.GetByCodeWithPlayersAndRoundsAsync(code);
+        var game = await gameRepository.GetByCodeWithPlayersAndRoundsAsync(code);
         if (game == null)
         {
             return NotFound();
@@ -172,7 +163,7 @@ public class GameController(
             return RedirectToAction(nameof(Lobby), new { code });
         }
 
-        var tempUserId = _sessionHelper.GetTempUserId();
+        var tempUserId = sessionHelper.GetTempUserId();
         if (tempUserId == null)
         {
             return RedirectToAction("Index", "Home");
@@ -183,7 +174,7 @@ public class GameController(
             return RedirectToAction("Index", "Home");
         }
 
-        var currentRound = await _roundRepository.GetCurrentRoundSnapshot(game.GameId, game.RoundCounter)
+        var currentRound = await roundRepository.GetCurrentRoundSnapshot(game.GameId, game.RoundCounter)
                 ?? throw new InvalidOperationException("Round not found.");
 
         var currentLeader = game.Players.First(p => p.Seat == game.LeaderSeat);
@@ -241,11 +232,11 @@ public class GameController(
 
         code = code.Trim().ToUpperInvariant();
 
-        var game = await _gameRepository.GetByCodeWithPlayersAndRoundsAsync(code);
+        var game = await gameRepository.GetByCodeWithPlayersAndRoundsAsync(code);
         if (game == null)
             return NotFound("Game not found.");
 
-        var tempUserId = _sessionHelper.GetTempUserId();
+        var tempUserId = sessionHelper.GetTempUserId();
         if (tempUserId == null)
             return Forbid();
 
@@ -276,11 +267,11 @@ public class GameController(
             }).ToList()
         };
 
-        await _teamProposalRepository.AddTeamProposalAsync(teamProposal);
-        await _teamProposalRepository.SaveChangesAsync();
+        await teamProposalRepository.AddTeamProposalAsync(teamProposal);
+        await teamProposalRepository.SaveChangesAsync();
 
-        await _roundRepository.UpdateRoundStatus(currentRound.RoundId, RoundStatus.VoteOnTeam);
-        await _roundRepository.SaveChangesAsync();
+        await roundRepository.UpdateRoundStatus(currentRound.RoundId, RoundStatus.VoteOnTeam);
+        await roundRepository.SaveChangesAsync();
 
         var teamMembers = game.Players
             .Where(p => selectedSeats.Contains(p.Seat))
@@ -293,7 +284,7 @@ public class GameController(
             .ToList();
 
         // Ledaren kommer även få denna uppdatering via sin egen anslutning när sidan laddas om, kan optimeras senare
-        await _hubContext.Clients.Group(code).SendAsync("TeamProposed", new
+        await hubContext.Clients.Group(code).SendAsync("TeamProposed", new
         {
             leaderSeat = game.LeaderSeat,
             leaderNickname = leader.Nickname,

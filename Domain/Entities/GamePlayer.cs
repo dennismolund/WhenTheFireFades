@@ -15,6 +15,8 @@ public class GamePlayer
     public int GameId { get; set; }
 
     public int? TempUserId { get; set; }
+    
+    public string? UserId { get; set; }
 
     [StringLength(40)]
     public string Nickname { get; set; } = string.Empty;
