@@ -25,10 +25,12 @@ public class GameController(
     public async Task<IActionResult> Create()
     {
         var tempUserId = sessionHelper.GetOrCreateTempUserId();
+        var authenticatedUserId = sessionHelper.GetAuthenticatedUserId();
+        var authenticatedName = sessionHelper.GetAuthenticatedUserName();
 
         var game = await gameOrchestrator.CreateGameAsync();
-        var gamePlayer = await gameOrchestrator.CreateGamePlayerAsync(game, tempUserId);
-
+        await gameOrchestrator.CreateGamePlayerAsync(game, tempUserId, authenticatedName, authenticatedUserId);
+        
         sessionHelper.SetCurrentGameCode(game.ConnectionCode);
         return RedirectToAction(nameof(Lobby), new { code = game.ConnectionCode });
     }
@@ -37,7 +39,9 @@ public class GameController(
     public async Task<IActionResult> Lobby(string code)
     {
         if (string.IsNullOrWhiteSpace(code))
+        {
             return BadRequest("Code is required.");
+        }
 
         code = code.Trim().ToUpperInvariant();
 
@@ -49,11 +53,10 @@ public class GameController(
 
         var tempUserId = sessionHelper.GetOrCreateTempUserId();
         var existingPlayer = game.Players.FirstOrDefault(p => p.TempUserId == tempUserId);
-
+        
         if (existingPlayer == null)
         {
-            var gamePlayer = await gameOrchestrator.CreateGamePlayerAsync(game, tempUserId);
-
+            await gameOrchestrator.CreateGamePlayerAsync(game, tempUserId);
             game = await gameRepository.GetByCodeWithPlayersAsync(code);
         }
 
