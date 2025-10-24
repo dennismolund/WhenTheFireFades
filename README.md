@@ -1,6 +1,6 @@
 # When the Fire Fades
 
-When the Fire Fades is a web-based social deduction game for exactly five players. Two hidden shapeshifters try to snuff out the campfire while three humans fight to keep it alive by completing missions across five escalating rounds. This repository contains an ASP.NET Core MVC application with SignalR-powered real-time communication and an Entity Framework Core data layer that powers the experience.
+When the Fire Fades is a web-based social deduction game for exactly five players. Two hidden shapeshifters try to snuff out the campfire while three humans fight to keep it alive by completing missions across five escalating rounds. The solution is organised according to Clean Architecture: the `Domain` project owns the core game rules, `Application` coordinates use cases, `Infrastructure` hosts technical concerns such as persistence and SignalR hubs, and the `Web` project delivers the ASP.NET Core MVC experience.
 
 ## Table of contents
 - [Game overview](#game-overview)
@@ -10,7 +10,6 @@ When the Fire Fades is a web-based social deduction game for exactly five player
 - [Domain & data model](#domain--data-model)
 - [Client experience](#client-experience)
 - [Getting started](#getting-started)
-- [Development scripts](#development-scripts)
 - [Roadmap](#roadmap)
 
 ## Game overview
@@ -53,19 +52,14 @@ Between missions, the lobby chat (delivered through SignalR) becomes the arena f
 - **Bootstrap 5** (via LibMan) for styling the lobby and landing page components.
 
 ## Solution architecture
-The solution follows a layered architecture where each folder maps to a responsibility:
+The solution adheres to Clean Architecture with four isolated projects that reference one another from the inside out:
 
-| Folder | Responsibility |
-| --- | --- |
-| `Controllers/` | HTTP endpoints (`GameController`, `HomeController`) that orchestrate the gameplay flow and bridge views/services. |
-| `Domain/` | Application-specific logic. `Services/GameService` creates games and seats players, `Helpers/SessionHelper` manages anonymous session state, and `Rules` holds future rule engines. |
-| `Data/` | Persistence layer with `ApplicationDbContext`, repository abstractions (`IGameRepository`, `IGamePlayerRepository`) and their EF Core implementations. |
-| `Models/` | Entity classes that represent games, rounds, mission votes, team proposals, and relationships. |
-| `ViewModels/` | Shapes data for Razor views (e.g., `GameLobbyVm`). |
-| `Hubs/` | SignalR hubs (`GameLobbyHub`) that broadcast lobby changes to connected clients. |
-| `Views/` & `wwwroot/` | Razor UI and static assets for the lobby, join modal, and styling.
-
-Dependency injection (configured in `Program.cs`) wires controllers, services, repositories, SignalR, and session state so the web app stays modular and testable.
+| Project | Layer | Responsibility |
+| --- | --- | --- |
+| `Domain/` | Core | Pure game domain model: entities (`Game`, `Round`, `TeamProposal`, etc.) and supporting enums with no external dependencies. |
+| `Application/` | Application | Use-case orchestration (`Services/GameOrchestrator`), contracts (`Interfaces/IGameRepository`, `ITeamProposalRepository`, etc.), and business rules that consume the domain model. |
+| `Infrastructure/` | Infrastructure | EF Core persistence (`Persistence/ApplicationDbContext`, repository implementations, migrations) and SignalR wiring under `Realtime/`. Implements the interfaces defined by the Application layer. |
+| `Web/` | Presentation | ASP.NET Core MVC front end: controllers, hubs, Razor views, and DI configuration (`Program.cs`) that stitches Application and Infrastructure together.
 
 ## Domain & data model
 The core entities are:
@@ -77,7 +71,7 @@ The core entities are:
 - **TeamProposalMember** & **TeamProposalVote** – Which seats were selected and how each player voted on the team.
 - **MissionVote** – Secret votes cast by mission participants indicating gather wood or sabotage.
 
-Refer to the `Models/` folder for the exact property sets and data annotations that govern persistence rules.
+Refer to the `Domain/Entities/` folder for the exact property sets and data annotations that govern persistence rules. Entity Framework Core configuration and migrations live under `Infrastructure/Persistence/`.
 
 ## Client experience
 - The landing page (`Views/Home/Index.cshtml`) presents options to create a game or join via code, showing the player nickname stored in session.
@@ -95,24 +89,20 @@ Refer to the `Models/` folder for the exact property sets and data annotations t
    - Provide a `DefaultConnection` entry either in `appsettings.Development.json`, via [User Secrets](https://learn.microsoft.com/aspnet/core/security/app-secrets), or environment variables. The app targets SQL Server.
 3. **Apply migrations**
    ```bash
-   dotnet ef database update --project WhenTheFireFades/WhenTheFireFades.csproj
+   dotnet ef database update --project Infrastructure/Infrastructure.csproj --startup-project Web/Web.csproj
    ```
 4. **Run the app**
    ```bash
-   dotnet run --project WhenTheFireFades/WhenTheFireFades.csproj
+   dotnet run --project Web/Web.csproj
    ```
 5. **Open the site**
    - Navigate to `https://localhost:5001` (or the HTTP port shown in console output).
-
-## Development scripts
-Additional helpers live under `Data/DbScripts/` for ad-hoc database resets during development (`CreateTables.sql`, `DeleteAllTables.sql`). Repository methods that are not yet required throw `NotImplementedException` to signal future work.
 
 ## Roadmap
 - Flesh out mission and round resolution services (`RoundService`, `GameRules`).
 - Persist and surface chat history in real time alongside lobby updates.
 - Harden lobby workflows (seat limits, reconnect flows, and handling disconnections in `GameLobbyHub`).
 - Build end-to-end tests covering lobby creation, team proposals, and mission outcomes.
-- Expand the UI with mission dashboards, suspicion tracking, and theming enhancements.
 
 ---
 
