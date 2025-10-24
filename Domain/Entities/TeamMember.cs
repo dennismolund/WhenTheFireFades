@@ -5,17 +5,17 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Entities;
 
-public class TeamProposalMember
+public class TeamMember
 {
     [Key]
-    public int TeamProposalMemberId { get; set; }
+    public int TeamMemberId { get; set; }
 
     [Required]
-    public int TeamProposalId { get; set; }
+    public int TeamId { get; set; }
 
     [Required]
     public int Seat { get; set; }
 
-    [ForeignKey(nameof(TeamProposalId))]
-    public TeamProposal TeamProposal { get; set; } = default!;
+    [ForeignKey(nameof(TeamId))]
+    public Team Team { get; set; } = default!;
 }

@@ -12,8 +12,8 @@ public class GameHub(
     IGameRepository gameRepository,
     IGamePlayerRepository gamePlayerRepository,
     IRoundRepository roundRepository,
-    ITeamProposalRepository teamProposalRepository,
-    ITeamProposalVoteRepository teamProposalVoteRepository,
+    ITeamRepository teamRepository,
+    ITeamVoteRepository teamVoteRepository,
     IMissionVoteRepository missionVoteRepository,
     GameOrchestrator gameOrchestrator,
     SessionHelper sessionHelper) : Hub
@@ -49,23 +49,20 @@ public class GameHub(
         }
 
         var game = await gameRepository.GetByCodeWithPlayersAsync(gameCode);
-        if (game != null)
+        var player = game?.Players.FirstOrDefault(p => p.TempUserId == tempUserId.Value);
+        if (player != null)
         {
-            var player = game.Players.FirstOrDefault(p => p.TempUserId == tempUserId.Value);
-            if (player != null)
-            {
-                player.IsReady = isReady;
-                player.UpdatedAtUtc = DateTime.UtcNow;
-                await gamePlayerRepository.SaveChangesAsync();
+            player.IsReady = isReady;
+            player.UpdatedAtUtc = DateTime.UtcNow;
+            await gamePlayerRepository.SaveChangesAsync();
 
-                await Clients.Group(gameCode).SendAsync("PlayerReadyChanged", new
-                {
-                    tempUserId = player.TempUserId,
-                    nickname = player.Nickname,
-                    isReady = player.IsReady,
-                    allPlayersReady = game.Players.All(p => p.IsReady)
-                });
-            }
+            await Clients.Group(gameCode).SendAsync("PlayerReadyChanged", new
+            {
+                tempUserId = player.TempUserId,
+                nickname = player.Nickname,
+                isReady = player.IsReady,
+                allPlayersReady = game?.Players.All(p => p.IsReady)
+            });
         }
     }
 
@@ -90,26 +87,26 @@ public class GameHub(
         var round = game.Rounds.OrderByDescending(r => r.RoundNumber).FirstOrDefault();
         if (round == null || round.Status != RoundStatus.VoteOnTeam) return;
 
-        var teamProposal = await teamProposalRepository.GetActiveByRoundIdAsync(round.RoundId);
-        if (teamProposal == null) return;
+        var team = await teamRepository.GetActiveByRoundIdAsync(round.RoundId);
+        if (team == null) return;
 
-        var existingVotes = await teamProposalVoteRepository.GetByTeamProposalAsync(teamProposal.TeamProposalId);
+        var existingVotes = await teamVoteRepository.GetByTeamAsync(team.TeamId);
         if (existingVotes.Any(v => v.Seat == voter.Seat))
         {
             return;
         }
 
-        var teamProposalVote = new TeamProposalVote()
+        var teamVote = new TeamVote()
         {
-            TeamProposalId = teamProposal.TeamProposalId,
+            TeamId = team.TeamId,
             Seat = voter.Seat,
             IsApproved = isApproved,
             CreatedAtUtc = DateTime.UtcNow,
-            TeamProposal = teamProposal
+            Team = team
         };
 
-        await teamProposalVoteRepository.AddTeamProposalVoteAsync(teamProposalVote);
-        await teamProposalVoteRepository.SaveChangesAsync();
+        await teamVoteRepository.AddTeamVoteAsync(teamVote);
+        await teamVoteRepository.SaveChangesAsync();
 
         await Clients.Group(gameCode).SendAsync("PlayerVoted", new
         {
@@ -118,39 +115,39 @@ public class GameHub(
             isApproved
         });
 
-        existingVotes.Add(teamProposalVote);
-        var requiredVotes = game.Players.Count - 1; // Alla utom ledaren ska rösta.
+        existingVotes.Add(teamVote);
+        var requiredVotes = game.Players.Count - 1; // Everyone except leader votes
 
         if (existingVotes.Count >= requiredVotes)
         {
-            // Har marioteten röstat ja så går teamet igenom
-            var approvalCount = existingVotes.Count(v => v.IsApproved) + 1; // +1 för att räkna med ledarens röst
+            // If majority votes yes the team will be approved
+            var approvalCount = existingVotes.Count(v => v.IsApproved) + 1; // +1 to count leaders vote
             var rejectionCount = existingVotes.Count(v => !v.IsApproved);
             var voteIsApproved = approvalCount > rejectionCount;
 
-            await teamProposalRepository.SaveChangesAsync();
+            await teamRepository.SaveChangesAsync();
 
             await Clients.Group(gameCode).SendAsync("TeamVoteResult", new
             {
-                teamProposalId = teamProposal.TeamProposalId,
+                team.TeamId,
                 rejectionCount,
                 approvalCount,
                 voteIsApproved,
-                attemptNumber = teamProposal.AttemptNumber
+                attemptNumber = team.AttemptNumber
             });
 
             if (voteIsApproved)
             {
-                await HandleTeamApproved(game, round, teamProposal, gameCode);
+                await HandleTeamApproved(game, round, team, gameCode);
             }
             else
             {
-                await HandleTeamRejected(game, round, teamProposal, gameCode);
+                await HandleTeamRejected(game, round, team, gameCode);
             }
         }
     }
 
-    private async Task HandleTeamRejected(Game game, Round round, TeamProposal teamProposal, string gameCode)
+    private async Task HandleTeamRejected(Game game, Round round, Team team, string gameCode)
     {
         game.ConsecutiveRejectedProposals++;
 
@@ -178,11 +175,11 @@ public class GameHub(
         round.Status = RoundStatus.TeamSelection;
         round.UpdatedAtUtc = DateTime.UtcNow;
 
-        teamProposal.IsActive = false;
+        team.IsActive = false;
 
         await gameRepository.SaveChangesAsync();
         await roundRepository.SaveChangesAsync();
-        await teamProposalRepository.SaveChangesAsync();
+        await teamRepository.SaveChangesAsync();
 
         var newLeader = game.Players.First(p => p.Seat == game.LeaderSeat);
 
@@ -195,12 +192,12 @@ public class GameHub(
         });
     }
 
-    private int GetNewLeaderSet(Game game)
+    private static int GetNewLeaderSet(Game game)
     {
         return (game.LeaderSeat == game.Players.Count) ? 1 : game.LeaderSeat + 1;
     }
 
-    private async Task HandleTeamApproved(Game game, Round round, TeamProposal teamProposal, string gameCode)
+    private async Task HandleTeamApproved(Game game, Round round, Team team, string gameCode)
     {
         game.ConsecutiveRejectedProposals = 0;
 
@@ -212,10 +209,9 @@ public class GameHub(
 
         await Clients.Group(gameCode).SendAsync("MissionStarted", new
         {
-            teamProposalId = teamProposal.TeamProposalId,
+            team.TeamId,
             roundNumber = round.RoundNumber,
         });
-
     }
 
     public async Task VoteOnMission(string gameCode, bool isSuccess)
@@ -231,8 +227,8 @@ public class GameHub(
         var round = game.Rounds.OrderByDescending(r => r.RoundNumber).FirstOrDefault();
         if (round == null || round.Status != RoundStatus.SecretChoices) return;
 
-        var teamProposal = await teamProposalRepository.GetByRoundIdAsync(round.RoundId);
-        if (teamProposal == null) return;
+        var team = await teamRepository.GetByRoundIdAsync(round.RoundId);
+        if (team == null) return;
 
         var existingVotes = await missionVoteRepository.GetByRoundIdAsync(round.RoundId);
         if (existingVotes.Any(v => v.Seat == voter.Seat))
@@ -259,19 +255,17 @@ public class GameHub(
         });
 
         existingVotes.Add(missionVote);
-        var requiredVotes = teamProposal.Members.Count;
+        var requiredVotes = team.Members.Count;
 
         
         if (existingVotes.Count >= requiredVotes)
         {
-            int successVotes = existingVotes.Count(v => v.IsSuccess);
-            int failVotes = existingVotes.Count(v => !v.IsSuccess);
+            var successVotes = existingVotes.Count(v => v.IsSuccess);
+            var failVotes = existingVotes.Count(v => !v.IsSuccess);
             var voteIsSuccessful = failVotes == 0;
-
-
-            //Teamet har röstat klart så vi sätter teamet som inaktivt
-            teamProposal.IsActive = false;
-            await teamProposalRepository.SaveChangesAsync();
+            
+            team.IsActive = false;
+            await teamRepository.SaveChangesAsync();
 
             if (voteIsSuccessful)
             {
@@ -364,7 +358,6 @@ public class GameHub(
             });
         }
     }
-
     public async Task GameStarted(string gameCode)
     {
         await Clients.Group(gameCode).SendAsync("GameStarted");
@@ -374,6 +367,4 @@ public class GameHub(
     {
         await base.OnDisconnectedAsync(exception);
     }
-
-
 }

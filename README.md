@@ -56,8 +56,8 @@ The solution adheres to Clean Architecture with four isolated projects that refe
 
 | Project | Layer | Responsibility |
 | --- | --- | --- |
-| `Domain/` | Core | Pure game domain model: entities (`Game`, `Round`, `TeamProposal`, etc.) and supporting enums with no external dependencies. |
-| `Application/` | Application | Use-case orchestration (`Services/GameOrchestrator`), contracts (`Interfaces/IGameRepository`, `ITeamProposalRepository`, etc.), and business rules that consume the domain model. |
+| `Domain/` | Core | Pure game domain model: entities (`Game`, `Round`, `Team`, etc.) and supporting enums with no external dependencies. |
+| `Application/` | Application | Use-case orchestration (`Services/GameOrchestrator`), contracts (`Interfaces/IGameRepository`, `ITeamRepository`, etc.), and business rules that consume the domain model. |
 | `Infrastructure/` | Infrastructure | EF Core persistence (`Persistence/ApplicationDbContext`, repository implementations, migrations) and SignalR wiring under `Realtime/`. Implements the interfaces defined by the Application layer. |
 | `Web/` | Presentation | ASP.NET Core MVC front end: controllers, hubs, Razor views, and DI configuration (`Program.cs`) that stitches Application and Infrastructure together.
 
@@ -67,8 +67,8 @@ The core entities are:
 - **Game** – Tracks connection code, leader seat, round counters, and win state.
 - **GamePlayer** – Associates a seat, nickname, readiness, and temporary user identifier with a game.
 - **Round** – Captures per-round metadata: leader, team size, phase progression, sabotage count, and team vote counter.
-- **TeamProposal** – The single mission proposal for a round, storing membership and approval status. (The original design allowed multiple proposals per round, but the current implementation enforces a one-to-one relationship between `Round` and `TeamProposal`.)
-- **TeamProposalMember** & **TeamProposalVote** – Which seats were selected and how each player voted on the team.
+- **Team** – The single mission proposal for a round, storing membership and approval status. (The original design allowed multiple proposals per round, but the current implementation enforces a one-to-one relationship between `Round` and `Team`.)
+- **TeamMember** & **TeamVote** – Which seats were selected and how each player voted on the team.
 - **MissionVote** – Secret votes cast by mission participants indicating gather wood or sabotage.
 
 Refer to the `Domain/Entities/` folder for the exact property sets and data annotations that govern persistence rules. Entity Framework Core configuration and migrations live under `Infrastructure/Persistence/`.

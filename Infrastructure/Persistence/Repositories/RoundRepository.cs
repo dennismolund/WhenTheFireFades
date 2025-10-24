@@ -36,9 +36,9 @@ public class RoundRepository(ApplicationDbContext db) : IRoundRepository
     public async Task<Round?> GetCurrentRoundSnapshot(int gameId, int roundNumber)
     {
         return await db.Rounds
-            .Include(r => r.TeamProposals.Where(tp => tp.IsActive))
+            .Include(r => r.Teams.Where(tp => tp.IsActive))
                 .ThenInclude(tp => tp.Votes)        
-            .Include(r => r.TeamProposals.Where(tp => tp.IsActive))
+            .Include(r => r.Teams.Where(tp => tp.IsActive))
                 .ThenInclude(tp => tp.Members)   
             .FirstOrDefaultAsync(r => r.GameId == gameId && r.RoundNumber == roundNumber);
     }

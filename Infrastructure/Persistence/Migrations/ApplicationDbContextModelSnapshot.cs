@@ -186,13 +186,13 @@ namespace Infrastructure.Persistence.Migrations
                     b.ToTable("Rounds");
                 });
 
-            modelBuilder.Entity("Domain.Entities.TeamProposal", b =>
+            modelBuilder.Entity("Domain.Entities.Team", b =>
                 {
-                    b.Property<int>("TeamProposalId")
+                    b.Property<int>("TeamId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TeamProposalId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TeamId"));
 
                     b.Property<int>("AttemptNumber")
                         .HasColumnType("int");
@@ -209,41 +209,41 @@ namespace Infrastructure.Persistence.Migrations
                     b.Property<int>("RoundId")
                         .HasColumnType("int");
 
-                    b.HasKey("TeamProposalId");
+                    b.HasKey("TeamId");
 
                     b.HasIndex("RoundId");
 
-                    b.ToTable("TeamProposals");
+                    b.ToTable("Teams");
                 });
 
-            modelBuilder.Entity("Domain.Entities.TeamProposalMember", b =>
+            modelBuilder.Entity("Domain.Entities.TeamMember", b =>
                 {
-                    b.Property<int>("TeamProposalMemberId")
+                    b.Property<int>("TeamMemberId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TeamProposalMemberId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TeamMemberId"));
 
                     b.Property<int>("Seat")
                         .HasColumnType("int");
 
-                    b.Property<int>("TeamProposalId")
+                    b.Property<int>("TeamId")
                         .HasColumnType("int");
 
-                    b.HasKey("TeamProposalMemberId");
+                    b.HasKey("TeamMemberId");
 
-                    b.HasIndex("TeamProposalId");
+                    b.HasIndex("TeamId");
 
-                    b.ToTable("TeamProposalMembers");
+                    b.ToTable("TeamMembers");
                 });
 
-            modelBuilder.Entity("Domain.Entities.TeamProposalVote", b =>
+            modelBuilder.Entity("Domain.Entities.TeamVote", b =>
                 {
-                    b.Property<int>("TeamProposalVoteId")
+                    b.Property<int>("TeamVoteId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TeamProposalVoteId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TeamVoteId"));
 
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("Datetime2");
@@ -254,14 +254,14 @@ namespace Infrastructure.Persistence.Migrations
                     b.Property<int>("Seat")
                         .HasColumnType("int");
 
-                    b.Property<int>("TeamProposalId")
+                    b.Property<int>("TeamId")
                         .HasColumnType("int");
 
-                    b.HasKey("TeamProposalVoteId");
+                    b.HasKey("TeamVoteId");
 
-                    b.HasIndex("TeamProposalId");
+                    b.HasIndex("TeamId");
 
-                    b.ToTable("TeamProposalVotes");
+                    b.ToTable("TeamVotes");
                 });
 
             modelBuilder.Entity("Infrastructure.Identity.ApplicationUser", b =>
@@ -504,10 +504,10 @@ namespace Infrastructure.Persistence.Migrations
                     b.Navigation("Game");
                 });
 
-            modelBuilder.Entity("Domain.Entities.TeamProposal", b =>
+            modelBuilder.Entity("Domain.Entities.Team", b =>
                 {
                     b.HasOne("Domain.Entities.Round", "Round")
-                        .WithMany("TeamProposals")
+                        .WithMany("Teams")
                         .HasForeignKey("RoundId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -515,26 +515,26 @@ namespace Infrastructure.Persistence.Migrations
                     b.Navigation("Round");
                 });
 
-            modelBuilder.Entity("Domain.Entities.TeamProposalMember", b =>
+            modelBuilder.Entity("Domain.Entities.TeamMember", b =>
                 {
-                    b.HasOne("Domain.Entities.TeamProposal", "TeamProposal")
+                    b.HasOne("Domain.Entities.Team", "Team")
                         .WithMany("Members")
-                        .HasForeignKey("TeamProposalId")
+                        .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("TeamProposal");
+                    b.Navigation("Team");
                 });
 
-            modelBuilder.Entity("Domain.Entities.TeamProposalVote", b =>
+            modelBuilder.Entity("Domain.Entities.TeamVote", b =>
                 {
-                    b.HasOne("Domain.Entities.TeamProposal", "TeamProposal")
+                    b.HasOne("Domain.Entities.Team", "Team")
                         .WithMany("Votes")
-                        .HasForeignKey("TeamProposalId")
+                        .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("TeamProposal");
+                    b.Navigation("Team");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -599,10 +599,10 @@ namespace Infrastructure.Persistence.Migrations
                 {
                     b.Navigation("MissionVotes");
 
-                    b.Navigation("TeamProposals");
+                    b.Navigation("Teams");
                 });
 
-            modelBuilder.Entity("Domain.Entities.TeamProposal", b =>
+            modelBuilder.Entity("Domain.Entities.Team", b =>
                 {
                     b.Navigation("Members");
 

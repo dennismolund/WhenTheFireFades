@@ -5,10 +5,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Entities;
 
-public class TeamProposal
+public class Team
 {
     [Key]
-    public int TeamProposalId { get; set; }
+    public int TeamId { get; set; }
 
     [Required]
     public int RoundId { get; set; }
@@ -27,6 +27,6 @@ public class TeamProposal
     [ForeignKey(nameof(RoundId))]
     public Round Round { get; set; } = default!;
 
-    public ICollection<TeamProposalMember> Members { get; set; } = new List<TeamProposalMember>();
-    public ICollection<TeamProposalVote> Votes { get; set; } = new List<TeamProposalVote>();
+    public ICollection<TeamMember> Members { get; set; } = new List<TeamMember>();
+    public ICollection<TeamVote> Votes { get; set; } = new List<TeamVote>();
 }

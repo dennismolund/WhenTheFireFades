@@ -15,7 +15,7 @@ public class GameController(
     IGameRepository gameRepository, 
     IGamePlayerRepository gamePlayerRepository,
     IRoundRepository roundRepository,
-    ITeamProposalRepository teamProposalRepository,
+    ITeamRepository teamRepository,
     SessionHelper sessionHelper, 
     IHubContext<GameHub> hubContext) : Controller
 {
@@ -199,10 +199,10 @@ public class GameController(
 
         if (currentRound.Status == RoundStatus.VoteOnTeam || currentRound.Status == RoundStatus.SecretChoices)
         {
-            var activeProposal = currentRound.TeamProposals.FirstOrDefault(tp => tp.IsActive);
+            var activeProposal = currentRound.Teams.FirstOrDefault(tp => tp.IsActive);
             if (activeProposal != null)
             {
-                viewModel.ActiveTeamProposal = activeProposal;
+                viewModel.ActiveTeam = activeProposal;
 
                 // Get team members from proposal
                 var proposedSeats = activeProposal.Members.Select(m => m.Seat).ToList();
@@ -214,7 +214,7 @@ public class GameController(
                 // Get votes if in voting phase
                 if (currentRound.Status == RoundStatus.VoteOnTeam)
                 {
-                    viewModel.TeamProposalVotes = activeProposal.Votes.ToList();
+                    viewModel.TeamVotes = activeProposal.Votes.ToList();
                     viewModel.HasCurrentPlayerVoted = activeProposal.Votes
                         .Any(v => v.Seat == currentPlayer.Seat);
                 }
@@ -264,21 +264,21 @@ public class GameController(
             return RedirectToAction(nameof(Play), new { code });
         }
 
-        var teamProposal = new TeamProposal
+        var team = new Team
         {
             RoundId = currentRound.RoundId,
-            AttemptNumber = currentRound.TeamProposals.Count + 1,
+            AttemptNumber = currentRound.Teams.Count + 1,
             IsActive = true,
             CreatedAtUtc = DateTime.UtcNow,
             Round = currentRound,
-            Members = selectedSeats.Select(seat => new TeamProposalMember
+            Members = selectedSeats.Select(seat => new TeamMember
             {
                 Seat = seat
             }).ToList()
         };
 
-        await teamProposalRepository.AddTeamProposalAsync(teamProposal);
-        await teamProposalRepository.SaveChangesAsync();
+        await teamRepository.AddTeamAsync(team);
+        await teamRepository.SaveChangesAsync();
 
         await roundRepository.UpdateRoundStatus(currentRound.RoundId, RoundStatus.VoteOnTeam);
         await roundRepository.SaveChangesAsync();

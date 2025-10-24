@@ -64,9 +64,9 @@ builder.Services.AddScoped<IGamePlayerRepository, GamePlayerRepository>();
 
 builder.Services.AddScoped<IRoundRepository, RoundRepository>();
 
-builder.Services.AddScoped<ITeamProposalRepository, TeamProposalRepository>();
+builder.Services.AddScoped<ITeamRepository, TeamRepository>();
 
-builder.Services.AddScoped<ITeamProposalVoteRepository, TeamProposalVoteRepository>();
+builder.Services.AddScoped<ITeamVoteRepository, TeamVoteRepository>();
 
 builder.Services.AddScoped<IMissionVoteRepository, MissionVoteRepository>();
 

@@ -75,15 +75,15 @@
                     <div class="list-group">
                         @foreach (var player in Model.Game.Players.OrderBy(p => p.Seat))
                         {
-                            <div class="list-group-item d-flex justify-content-between align-items-center @(player.Seat == Model.CurrentLeader.Seat ? "list-group-item-warning" : "")">
+                            <div class="list-group-item d-flex justify-content-between align-items-center @(player.Seat == Model.CurrentLeader?.Seat ? "list-group-item-warning" : "")">
                                 <div>
                                     <strong>@player.Nickname</strong>
                                     <span class="badge bg-secondary">Seat @player.Seat</span>
-                                    @if (player.TempUserId == Model.CurrentPlayer.TempUserId)
+                                    @if (player.TempUserId == Model.CurrentPlayer?.TempUserId)
                                     {
                                         <span class="badge bg-info">You</span>
                                     }
-                                    @if (player.Seat == Model.CurrentLeader.Seat)
+                                    @if (player.Seat == Model.CurrentLeader?.Seat)
                                     {
                                         <span class="badge bg-warning text-dark">👑 Leader</span>
                                     }
@@ -134,7 +134,7 @@
                             <!-- LEADER: Team Selection -->
                             <div id="leaderView">
                                 <div class="alert alert-warning">
-                                    <strong>You are the team leader!</strong> Select @Model.CurrentRound.TeamSize player(s) for this mission.
+                                    <strong>You are the team leader!</strong> Select @Model.CurrentRound?.TeamSize player(s) for this mission.
                                 </div>
 
                                 <form id="proposeTeamForm" asp-controller="Game" asp-action="ProposeTeam" method="post">
@@ -151,11 +151,11 @@
                                                            type="checkbox"
                                                            name="selectedSeats"
                                                            value="@player.Seat"
-                                                           data-team-size="@Model.CurrentRound.TeamSize">
+                                                           data-team-size="@Model.CurrentRound?.TeamSize">
                                                     <div class="flex-grow-1">
                                                         <strong>@player.Nickname</strong>
                                                         <span class="badge bg-secondary">Seat @player.Seat</span>
-                                                        @if (player.TempUserId == Model.CurrentPlayer.TempUserId)
+                                                        @if (player.TempUserId == Model.CurrentPlayer?.TempUserId)
                                                         {
                                                             <span class="badge bg-info">You</span>
                                                         }
@@ -166,7 +166,7 @@
                                     </div>
 
                                     <div class="alert alert-info" id="selectionInfo">
-                                        Selected: <strong><span id="selectedCount">0</span> / @Model.CurrentRound.TeamSize</strong>
+                                        Selected: <strong><span id="selectedCount">0</span> / @Model.CurrentRound?.TeamSize</strong>
                                     </div>
 
                                     <button type="submit" id="proposeTeamBtn" class="btn btn-success btn-lg w-100" disabled>
@@ -180,7 +180,7 @@
                             <!-- NON-LEADER: Waiting -->
                             <div id="nonLeaderView">
                                 <div class="alert alert-info">
-                                    <strong>@Model.CurrentLeader.Nickname</strong> is selecting the team. Please wait...
+                                    <strong>@Model.CurrentLeader?.Nickname</strong> is selecting the team. Please wait...
                                 </div>
                                 <div class="text-center">
                                     <div class="spinner-border text-primary" role="status">
@@ -195,7 +195,7 @@
                         <!-- VOTING PHASE: All Players -->
                         <div id="teamVotingView">
                             <div class="alert alert-success">
-                                <strong>@Model.CurrentLeader.Nickname</strong> has proposed a team!
+                                <strong>@Model.CurrentLeader?.Nickname</strong> has proposed a team!
                             </div>
 
                             <h5>Proposed Team:</h5>
@@ -205,7 +205,7 @@
                                     <div class="list-group-item">
                                         <strong>@member.Nickname</strong>
                                         <span class="badge bg-secondary">Seat @member.Seat</span>
-                                        @if (member.TempUserId == Model.CurrentPlayer.TempUserId)
+                                        @if (member.TempUserId == Model.CurrentPlayer?.TempUserId)
                                         {
                                             <span class="badge bg-info">You</span>
                                         }
@@ -247,11 +247,11 @@
 
                             <!-- Vote Status -->
                             <div id="voteStatus" class="mt-3">
-                                <h6>Votes Cast: @Model.TeamProposalVotes?.Count / @(Model.Game.Players.Count - 1)</h6>
+                                <h6>Votes Cast: @Model.TeamVotes?.Count / @(Model.Game.Players.Count - 1)</h6>
                                 <div id="votesList" class="list-group">
-                                    @if (Model.TeamProposalVotes != null)
+                                    @if (Model.TeamVotes != null)
                                     {
-                                        foreach (var vote in Model.TeamProposalVotes)
+                                        foreach (var vote in Model.TeamVotes)
                                         {
                                             var voter = Model.Game.Players.First(p => p.Seat == vote.Seat);
                                             <div class="list-group-item d-flex justify-content-between">
@@ -293,7 +293,7 @@
                                         <button class="btn btn-success btn-lg" id="voteSuccessBtn">
                                             Gather Wood (Success)
                                         </button>
-                                        @if (Model.CurrentPlayer.Role == Domain.Enums.PlayerRole.Shapeshifter)
+                                        @if (Model.CurrentPlayer?.Role == Domain.Enums.PlayerRole.Shapeshifter)
                                         {
                                             <button class="btn btn-danger btn-lg" id="voteSabotageBtn">
                                                 Sabotage Mission
@@ -327,7 +327,7 @@
                                             <div class="list-group-item">
                                                 <strong>@member.Nickname</strong>
                                                 <span class="badge bg-secondary">Seat @member.Seat</span>
-                                                @if (member.TempUserId == Model.CurrentPlayer.TempUserId)
+                                                @if (member.TempUserId == Model.CurrentPlayer?.TempUserId)
                                                 {
                                                     <span class="badge bg-info">You</span>
                                                 }
@@ -354,8 +354,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
     <script>
         gameCode = '@Model.Game.ConnectionCode';
-        const tempUserId = @Model.CurrentPlayer.TempUserId;
-        const currentPlayerSeat = @Model.CurrentPlayer.Seat;
+        const tempUserId = @Model.CurrentPlayer?.TempUserId;
+        const currentPlayerSeat = @Model.CurrentPlayer?.Seat;
         const isLeader = @Model.IsLeader.ToString().ToLower();
         const isVotingPhase = @Model.IsVotingPhase.ToString().ToLower();
         const isMissionPhase = @Model.IsMissionPhase.ToString().ToLower();
@@ -372,7 +372,7 @@
             showLeaderChange(data);
         });
 
-        connection.on("TeamProposed", function (data) {
+        connection.on("TeamProposed", function () {
             console.log("Team proposed, reloading...");
             window.location.reload();
         });
@@ -388,7 +388,7 @@
         });
 
 
-        connection.on("MissionStarted", function (data) {
+        connection.on("MissionStarted", function () {
             console.log("Mission has started, reloading...");
             window.location.reload();
         });
@@ -404,13 +404,12 @@
         });
 
         //Förstå hur jag ska starta denna efter resultatet är visat.
-        connection.on("StartNextRound", function(data){
+        connection.on("StartNextRound", function(){
             console.log("Starting next round, reloading...");
             setTimeout(() => window.location.reload(), 3000);
 
         });
         
-
         connection.on("GameEnded", function (data) {
             console.log("Game ended:", data);
             showGameEnd(data);

@@ -5,13 +5,13 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Entities;
 
-public class TeamProposalVote
+public class TeamVote
 {
     [Key]
-    public int TeamProposalVoteId { get; set; }
+    public int TeamVoteId { get; set; }
 
     [Required]
-    public int TeamProposalId { get; set; }
+    public int TeamId { get; set; }
 
     [Required]
     public int Seat { get; set; }
@@ -22,6 +22,6 @@ public class TeamProposalVote
     [Column(TypeName = "Datetime2")]
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
-    [ForeignKey(nameof(TeamProposalId))]
-    public TeamProposal TeamProposal { get; set; } = default!;
+    [ForeignKey(nameof(TeamId))]
+    public Team Team { get; set; } = default!;
 }
