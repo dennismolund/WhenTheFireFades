@@ -55,7 +55,7 @@ public class GameController(
         var authenticatedUserId = sessionHelper.GetAuthenticatedUserId();
         var authenticatedName = sessionHelper.GetAuthenticatedUserName();        
         
-        var existingPlayer = game.Players.FirstOrDefault(p => p.TempUserId == tempUserId || p.UserId == authenticatedUserId);
+        var existingPlayer = game.Players.FirstOrDefault(p => p.TempUserId == tempUserId);
         
         if (existingPlayer == null)
         {
@@ -98,7 +98,11 @@ public class GameController(
             await gamePlayerRepository.SaveChangesAsync();
 
             game = await gameRepository.GetByCodeWithPlayersAsync(code);
-
+            if (game == null)
+            {
+                return NotFound();
+            }
+            
             await hubContext.Clients.Group(code).SendAsync("PlayerLeft", new
             {
                 leftUserId = tempUserId,
@@ -140,7 +144,7 @@ public class GameController(
         }
 
         // Start the game
-        var round = await gameOrchestrator.StartGameAsync(game);
+        await gameOrchestrator.StartGameAsync(game);
 
         await hubContext.Clients.Group(code).SendAsync("GameStarted", new 
         {

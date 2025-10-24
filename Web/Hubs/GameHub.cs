@@ -132,10 +132,10 @@ public class GameHub(
 
         if (existingVotes.Count >= requiredVotes)
         {
-            // Har någon röstat nej så går teamet inte igenom.
+            // Har marioteten röstat ja så går teamet igenom
             var approvalCount = existingVotes.Count(v => v.IsApproved);
             var rejectionCount = existingVotes.Count(v => !v.IsApproved);
-            var voteIsApproved = rejectionCount == 0;
+            var voteIsApproved = approvalCount > rejectionCount;
 
             await _teamProposalRepository.SaveChangesAsync();
 
