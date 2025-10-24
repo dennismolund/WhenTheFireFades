@@ -6,28 +6,26 @@ namespace Infrastructure.Persistence;
 
 public class TeamProposalRepository(ApplicationDbContext db) : ITeamProposalRepository
 {
-    private readonly ApplicationDbContext _db = db;
-
     public async Task AddTeamProposalAsync(TeamProposal teamProposal)
     {
-        await _db.TeamProposals.AddAsync(teamProposal);
+        await db.TeamProposals.AddAsync(teamProposal);
     }
 
     public async Task<TeamProposal?> GetByIdAsync(int teamProposalId)
     {
-        return await _db.TeamProposals.FindAsync(teamProposalId);
+        return await db.TeamProposals.FindAsync(teamProposalId);
     }
 
     public async Task<TeamProposal?> GetByIdWithVotesAsync(int teamProposalId)
     {
-        return await _db.TeamProposals
+        return await db.TeamProposals
             .Include(tp => tp.Votes)
             .FirstOrDefaultAsync(tp => tp.TeamProposalId == teamProposalId);
     }
 
     public async Task<TeamProposal?> GetByRoundIdAsync(int roundId)
     {
-        return await _db.TeamProposals
+        return await db.TeamProposals
            .Include(tp => tp.Members)
            .Include(tp => tp.Votes)
            .OrderByDescending(tp => tp.AttemptNumber)
@@ -36,7 +34,7 @@ public class TeamProposalRepository(ApplicationDbContext db) : ITeamProposalRepo
 
     public async Task<TeamProposal?> GetActiveByRoundIdAsync(int roundId)
     {
-        return await _db.TeamProposals
+        return await db.TeamProposals
        .Where(tp => tp.RoundId == roundId && tp.IsActive)
        .Include(tp => tp.Votes)
        .Include(tp => tp.Members)
@@ -46,6 +44,6 @@ public class TeamProposalRepository(ApplicationDbContext db) : ITeamProposalRepo
 
     public async Task SaveChangesAsync()
     {
-        await _db.SaveChangesAsync();
+        await db.SaveChangesAsync();
     }
 }

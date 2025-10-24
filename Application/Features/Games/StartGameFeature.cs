@@ -2,19 +2,12 @@
 using Application.Interfaces;
 using Domain.Entities;
 using Domain.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Features.Games;
 public sealed class StartGameFeature(IGameRepository gameRepository, CreateRoundFeature createRoundFeature)
 {
-    private readonly IGameRepository _gameRepository = gameRepository;
-    private readonly CreateRoundFeature _createRoundFeature = createRoundFeature;
     private readonly Random _random = new();
-    private readonly int _minimumPlayerCount = 2;
+    private const int MinimumPlayerCount = 2;
 
     public async Task<Round> ExecuteAsync(Game game)
     {
@@ -28,8 +21,8 @@ public sealed class StartGameFeature(IGameRepository gameRepository, CreateRound
 
         
 
-        if (playerCount < _minimumPlayerCount)
-            throw new InvalidOperationException($"Not enough players to start the game. Minimum is {_minimumPlayerCount}.");
+        if (playerCount < MinimumPlayerCount)
+            throw new InvalidOperationException($"Not enough players to start the game. Minimum is {MinimumPlayerCount}.");
 
         AssignRoles(players);
 
@@ -39,9 +32,9 @@ public sealed class StartGameFeature(IGameRepository gameRepository, CreateRound
         game.RoundCounter = 1;
         game.LeaderSeat = 1;
 
-        await _gameRepository.SaveChangesAsync();
+        await gameRepository.SaveChangesAsync();
 
-        return await _createRoundFeature.ExecuteAsync(game, game.RoundCounter, game.LeaderSeat);
+        return await createRoundFeature.ExecuteAsync(game, game.RoundCounter, game.LeaderSeat);
 
     }
 

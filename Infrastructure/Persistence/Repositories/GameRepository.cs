@@ -1,27 +1,25 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Application.Interfaces;
+﻿using Application.Interfaces;
 using Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Persistence;
+namespace Infrastructure.Persistence.Repositories;
 
 public class GameRepository(ApplicationDbContext db) : IGameRepository
 {
-    private readonly ApplicationDbContext _db = db;
-
     public async Task AddGameAsync(Game game)
     {
-        await _db.Games.AddAsync(game);
+        await db.Games.AddAsync(game);
     }
 
     public async Task<Game?> GetByCodeAsync(string code)
     {
-        return await _db.Games
+        return await db.Games
             .FirstOrDefaultAsync(g => g.ConnectionCode == code);
     }
 
     public async Task<Game?> GetByIdWithPlayersAndRoundsAsync(int gameId)
     {
-        return await _db.Games
+        return await db.Games
             .Include(g => g.Players)
             .Include(g => g.Rounds)
             .FirstOrDefaultAsync(g => g.GameId == gameId);
@@ -29,7 +27,7 @@ public class GameRepository(ApplicationDbContext db) : IGameRepository
 
     public async Task<Game?> GetByCodeWithPlayersAsync(string code)
     {
-        var game = await _db.Games
+        var game = await db.Games
             .Include(g => g.Players)
             .FirstOrDefaultAsync(g => g.ConnectionCode == code);
 
@@ -38,19 +36,19 @@ public class GameRepository(ApplicationDbContext db) : IGameRepository
 
     public async Task<Game?> GetByIdWithPlayersAsync(int gameId)
     {
-        return await _db.Games
+        return await db.Games
             .Include(g => g.Players)
             .FirstOrDefaultAsync(g => g.GameId == gameId);
     }
 
     public async Task SaveChangesAsync()
     {
-        await _db.SaveChangesAsync();
+        await db.SaveChangesAsync();
     }
 
     public Task<Game?> GetByCodeWithPlayersAndRoundsAsync(string code)
     {
-        return _db.Games
+        return db.Games
             .Include(g => g.Players)
             .Include(g => g.Rounds)
             .FirstOrDefaultAsync(g => g.ConnectionCode == code);

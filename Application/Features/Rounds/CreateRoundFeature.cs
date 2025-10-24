@@ -10,8 +10,6 @@ using System.Threading.Tasks;
 namespace Application.Features.Rounds;
 public sealed class CreateRoundFeature(IRoundRepository roundRepository)
 {
-    private readonly IRoundRepository _roundRepository = roundRepository;
-
     public async Task<Round> ExecuteAsync(Game game, int roundNumber, int leaderSeat)
     {
         var playerCount = game.Players.Count;
@@ -29,8 +27,8 @@ public sealed class CreateRoundFeature(IRoundRepository roundRepository)
             SabotageCounter = 0,
         };
 
-        await _roundRepository.AddRoundAsync(round);
-        await _roundRepository.SaveChangesAsync();
+        await roundRepository.AddRoundAsync(round);
+        await roundRepository.SaveChangesAsync();
 
         return round;
     }

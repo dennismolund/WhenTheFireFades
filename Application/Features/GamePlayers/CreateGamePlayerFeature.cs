@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 namespace Application.Features.GamePlayers;
 public sealed class CreateGamePlayerFeature(IGamePlayerRepository gamePlayerRepository)
 {
-    private readonly IGamePlayerRepository _gamePlayerRepository = gamePlayerRepository;
-
     public async Task<GamePlayer> ExecuteAsync(Game game, int creatorTempUserId, string? creatorUsername = null, string? userId = null)
     {
-        var nextSeat = await _gamePlayerRepository.GetNextAvailableSeatAsync(game.GameId);
+        var nextSeat = await gamePlayerRepository.GetNextAvailableSeatAsync(game.GameId);
 
         var player = new GamePlayer
         {
@@ -30,8 +28,8 @@ public sealed class CreateGamePlayerFeature(IGamePlayerRepository gamePlayerRepo
             UpdatedAtUtc = DateTime.UtcNow,
         };
 
-        await _gamePlayerRepository.AddPlayerAsync(player);
-        await _gamePlayerRepository.SaveChangesAsync();
+        await gamePlayerRepository.AddPlayerAsync(player);
+        await gamePlayerRepository.SaveChangesAsync();
 
         return player;
     }

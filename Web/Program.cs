@@ -5,6 +5,7 @@ using Application.Interfaces;
 using Application.Services;
 using Infrastructure.Identity;
 using Infrastructure.Persistence;
+using Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Web.Helpers;
 using Web.Hubs;

@@ -7,22 +7,20 @@ namespace Infrastructure.Persistence;
 
 public class RoundRepository(ApplicationDbContext db) : IRoundRepository
 {
-    private readonly ApplicationDbContext _db = db;
-
     public async Task AddRoundAsync(Round round)
     {
-        await _db.Rounds.AddAsync(round);
+        await db.Rounds.AddAsync(round);
     }
 
     public async Task<Round?> GetCurrentRoundByGameId(int gameId, int roundNumber)
     {
-        Round? round = await _db.Rounds.FirstOrDefaultAsync(r => r.GameId == gameId && r.RoundNumber == roundNumber);
+        Round? round = await db.Rounds.FirstOrDefaultAsync(r => r.GameId == gameId && r.RoundNumber == roundNumber);
         return round;
     }
 
     public async Task UpdateRoundStatus(int roundId, RoundStatus status)
     {
-        var round = await _db.Rounds.FindAsync(roundId);
+        var round = await db.Rounds.FindAsync(roundId);
         if (round != null)
         {
             round.Status = status;
@@ -32,12 +30,12 @@ public class RoundRepository(ApplicationDbContext db) : IRoundRepository
 
     public async Task SaveChangesAsync()
     {
-        await _db.SaveChangesAsync();
+        await db.SaveChangesAsync();
     }
 
     public async Task<Round?> GetCurrentRoundSnapshot(int gameId, int roundNumber)
     {
-        return await _db.Rounds
+        return await db.Rounds
             .Include(r => r.TeamProposals.Where(tp => tp.IsActive))
                 .ThenInclude(tp => tp.Votes)        
             .Include(r => r.TeamProposals.Where(tp => tp.IsActive))

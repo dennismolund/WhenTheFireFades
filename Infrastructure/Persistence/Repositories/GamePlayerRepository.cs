@@ -6,17 +6,15 @@ namespace Infrastructure.Persistence;
 
 public class GamePlayerRepository(ApplicationDbContext db) : IGamePlayerRepository
 {
-    private readonly ApplicationDbContext _db = db;
-
     public async Task AddPlayerAsync(GamePlayer player)
     {
-        await _db.GamePlayers
+        await db.GamePlayers
             .AddAsync(player);
     }
 
     public async Task<GamePlayer?> GetByGameAndTempUserAsync(int gameId, int tempUserId)
     {
-        return await _db.GamePlayers
+        return await db.GamePlayers
             .SingleOrDefaultAsync(p => p.GameId == gameId && p.TempUserId == tempUserId);
     }
 
@@ -32,10 +30,10 @@ public class GamePlayerRepository(ApplicationDbContext db) : IGamePlayerReposito
 
     public async Task<int> GetNextAvailableSeatAsync(int gameId)
     {
-        var nextSeat = await _db.GamePlayers
+        var nextSeat = await db.GamePlayers
             .Where(gp => gp.GameId == gameId).ToListAsync();
 
-        var takenSeats = await _db.GamePlayers
+        var takenSeats = await db.GamePlayers
             .Where(gp => gp.GameId == gameId)
             .OrderBy(gp => gp.Seat)
             .Select(gp => gp.Seat)
@@ -86,12 +84,12 @@ public class GamePlayerRepository(ApplicationDbContext db) : IGamePlayerReposito
 
     public void RemovePlayer(GamePlayer player)
     {
-        _db.GamePlayers.Remove(player);
+        db.GamePlayers.Remove(player);
     }
 
     public async Task SaveChangesAsync()
     {
-        await _db.SaveChangesAsync();
+        await db.SaveChangesAsync();
     }
 
     public Task UpdatePlayerAsync(GamePlayer player)

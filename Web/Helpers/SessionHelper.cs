@@ -6,12 +6,11 @@ namespace Web.Helpers;
 
 public class SessionHelper(IHttpContextAccessor httpContextAccessor)
 {
-    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
     private const string TempUserIdKey = "TempUserId";
     private const string PlayerNicknameKey = "PlayerNickname";
     private const string CurrentGameCodeKey = "CurrentGameCode";
 
-    private ISession? Session => _httpContextAccessor.HttpContext?.Session;
+    private ISession? Session => httpContextAccessor.HttpContext?.Session;
 
     public int GetOrCreateTempUserId()
     {
@@ -73,12 +72,12 @@ public class SessionHelper(IHttpContextAccessor httpContextAccessor)
     
     public string? GetAuthenticatedUserId()
     {
-        return _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+        return httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
     }
 
     public string? GetAuthenticatedUserName()
     {
-        var user = _httpContextAccessor.HttpContext?.User;
+        var user = httpContextAccessor.HttpContext?.User;
         return user?.Identity?.IsAuthenticated == true ? user.Identity?.Name : null;
     }
 

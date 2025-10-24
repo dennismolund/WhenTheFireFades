@@ -10,8 +10,6 @@ using System.Threading.Tasks;
 namespace Application.Features.Games;
 public class CreateGameFeature(IGameRepository gameRepository)
 {
-    private readonly IGameRepository _gameRepository = gameRepository;
-
     public async Task<Game> ExecuteAsync()
     {
         var game = new Game
@@ -27,8 +25,8 @@ public class CreateGameFeature(IGameRepository gameRepository)
             UpdatedAtUtc = DateTime.UtcNow
         };
 
-        await _gameRepository.AddGameAsync(game);
-        await _gameRepository.SaveChangesAsync();
+        await gameRepository.AddGameAsync(game);
+        await gameRepository.SaveChangesAsync();
 
         return game;
     }
