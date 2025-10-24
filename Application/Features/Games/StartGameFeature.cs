@@ -4,12 +4,12 @@ using Domain.Entities;
 using Domain.Enums;
 
 namespace Application.Features.Games;
-public sealed class StartGameFeature(IGameRepository gameRepository, CreateRoundFeature createRoundFeature)
+public sealed class StartGameFeature(IGameRepository gameRepository)
 {
     private readonly Random _random = new();
     private const int MinimumPlayerCount = 2;
 
-    public async Task<Round> ExecuteAsync(Game game)
+    public async Task ExecuteAsync(Game game)
     {
         if (game == null)
             throw new ArgumentException("Game not found.");
@@ -33,9 +33,6 @@ public sealed class StartGameFeature(IGameRepository gameRepository, CreateRound
         game.LeaderSeat = 1;
 
         await gameRepository.SaveChangesAsync();
-
-        return await createRoundFeature.ExecuteAsync(game, game.RoundCounter, game.LeaderSeat);
-
     }
 
     private void AssignRoles(List<GamePlayer> players)

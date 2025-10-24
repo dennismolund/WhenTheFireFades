@@ -26,6 +26,7 @@ public sealed class GameOrchestrator(
     public async Task StartGameAsync(Game game)
     {
         await startGameFeature.ExecuteAsync(game);
+        await createRoundFeature.ExecuteAsync(game, game.RoundCounter, game.LeaderSeat);
     }
 
     public async Task CreateRoundAsync(Game game, int roundNumber, int leaderSeat)
