@@ -21,7 +21,7 @@ public sealed class PlayViewModel
     public bool IsVotingPhase => CurrentRound.Status == RoundStatus.VoteOnTeam;
     public bool IsMissionPhase => CurrentRound.Status == RoundStatus.SecretChoices;
 
-    public int CurrentAttemptNumber => ActiveTeam?.AttemptNumber ?? Game.ConsecutiveRejectedProposals + 1;
+    public int CurrentAttemptNumber => Game.ConsecutiveRejectedProposals + 1;
     public int RemainingAttempts => 5 - Game.ConsecutiveRejectedProposals;
 
     public bool IsOnMissionTeam

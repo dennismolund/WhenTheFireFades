@@ -8,11 +8,11 @@
         <div class="col-md-12">
             <div class="card bg-dark text-white">
                 <div class="card-body">
-                    <h2 class="card-title">Round @Model.CurrentRound?.RoundNumber</h2>
+                    <h2 class="card-title">Round @Model.CurrentRound.RoundNumber</h2>
                     <p class="card-text">
                         <strong>Team Leader:</strong>
                         <span class="badge bg-warning text-dark">
-                            @Model.CurrentLeader?.Nickname (Seat @Model.CurrentLeader?.Seat)
+                            @Model.CurrentLeader.Nickname (Seat @Model.CurrentLeader.Seat)
                         </span>
                     </p>
                     <p class="card-text">
@@ -41,11 +41,11 @@
         <!-- Your Role Card -->
         <div class="col-md-6">
             <div class="card mb-4">
-                <div class="card-header @(Model.CurrentPlayer?.Role == Domain.Enums.PlayerRole.Human ? "bg-primary" : "bg-danger") text-white">
+                <div class="card-header @(Model.CurrentPlayer.Role == Domain.Enums.PlayerRole.Human ? "bg-primary" : "bg-danger") text-white">
                     <h4>Your Role</h4>
                 </div>
                 <div class="card-body">
-                    @if (Model.CurrentPlayer?.Role == Domain.Enums.PlayerRole.Human)
+                    @if (Model.CurrentPlayer.Role == Domain.Enums.PlayerRole.Human)
                     {
                         <h3 class="text-primary">👤 Human</h3>
                         <p>You are a loyal human. Your goal is to successfully complete missions and identify the shapeshifter.</p>
@@ -134,7 +134,7 @@
                             <!-- LEADER: Team Selection -->
                             <div id="leaderView">
                                 <div class="alert alert-warning">
-                                    <strong>You are the team leader!</strong> Select @Model.CurrentRound?.TeamSize player(s) for this mission.
+                                    <strong>You are the team leader!</strong> Select @Model.CurrentRound.TeamSize player(s) for this mission.
                                 </div>
 
                                 <form id="proposeTeamForm" asp-controller="Game" asp-action="ProposeTeam" method="post">
@@ -367,11 +367,6 @@
             .withAutomaticReconnect()
             .build();
 
-        connection.on("NewLeaderSelected", function (data) {
-            console.log("New leader selected:", data);
-            showLeaderChange(data);
-        });
-
         connection.on("TeamProposed", function () {
             console.log("Team proposed, reloading...");
             window.location.reload();
@@ -386,7 +381,6 @@
             console.log("Team vote result:", data);
             showVoteResult(data);
         });
-
 
         connection.on("MissionStarted", function () {
             console.log("Mission has started, reloading...");
@@ -403,7 +397,11 @@
             }
         });
 
-        //Förstå hur jag ska starta denna efter resultatet är visat.
+        connection.on("MissionVoteResult", function (data) {
+            console.log("MissionVoteResult, reloading...");
+            showMissionResult(data);
+        });
+
         connection.on("StartNextRound", function(){
             console.log("Starting next round, reloading...");
             setTimeout(() => window.location.reload(), 3000);
@@ -533,8 +531,6 @@
 
         }
 
-        
-
         function showVoteResult(data) {
             const votingView = document.getElementById('teamVotingView');
             if (!votingView) return;
@@ -562,20 +558,6 @@
             setTimeout(() => window.location.reload(), 3000);
         }
 
-        function showLeaderChange(data) {
-            const alert = document.createElement('div');
-            alert.className = 'alert alert-warning position-fixed top-0 start-50 translate-middle-x mt-3';
-            alert.style.zIndex = '9999';
-            alert.innerHTML = `
-                <h5>New Leader Selected!</h5>
-                <p><strong>${data.newLeaderNickname}</strong> (Seat ${data.newLeaderSeat}) is now the team leader.</p>
-                <p>Attempt ${data.attemptNumber} of 5 (${data.remainingAttempts} remaining)</p>
-            `;
-            document.body.appendChild(alert);
-
-            setTimeout(() => window.location.reload(), 3000);
-        }
-
         function showGameEnd(data) {
             const overlay = document.createElement('div');
             overlay.className = 'position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center';
@@ -595,8 +577,6 @@
             `;
             document.body.appendChild(overlay);
         }
-
-
 
     </script>
 }

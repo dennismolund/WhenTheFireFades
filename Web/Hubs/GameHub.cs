@@ -127,14 +127,6 @@ public class GameHub(
 
             await teamRepository.SaveChangesAsync();
 
-            await Clients.Group(gameCode).SendAsync("TeamVoteResult", new
-            {
-                team.TeamId,
-                rejectionCount,
-                approvalCount,
-                voteIsApproved,
-                attemptNumber = team.AttemptNumber
-            });
 
             if (voteIsApproved)
             {
@@ -144,6 +136,20 @@ public class GameHub(
             {
                 await HandleTeamRejected(game, round, team, gameCode);
             }
+            
+            if (game.Status == GameStatus.Finished)
+            {
+                return;
+            }
+            
+            await Clients.Group(gameCode).SendAsync("TeamVoteResult", new
+            {
+                team.TeamId,
+                rejectionCount,
+                approvalCount,
+                voteIsApproved,
+                attemptNumber = team.AttemptNumber
+            });
         }
     }
 
@@ -180,16 +186,6 @@ public class GameHub(
         await gameRepository.SaveChangesAsync();
         await roundRepository.SaveChangesAsync();
         await teamRepository.SaveChangesAsync();
-
-        var newLeader = game.Players.First(p => p.Seat == game.LeaderSeat);
-
-        await Clients.Group(gameCode).SendAsync("NewLeaderSelected", new
-        {
-            newLeaderSeat = game.LeaderSeat,
-            newLeaderNickname = newLeader.Nickname,
-            attemptNumber = game.ConsecutiveRejectedProposals + 1,
-            remainingAttempts = 5 - game.ConsecutiveRejectedProposals
-        });
     }
 
     private static int GetNewLeaderSet(Game game)
@@ -276,6 +272,10 @@ public class GameHub(
                 await HandleVoteSabotaged(game, round, gameCode);
             }
 
+            if (game.Status == GameStatus.Finished)
+            {
+                return;
+            }
             await Clients.Group(gameCode).SendAsync("MissionVoteResult", new
             {
                 roundNumber = round.RoundNumber,
@@ -288,7 +288,7 @@ public class GameHub(
     }
 
     public async Task StartNextRound(string gameCode)
-        {
+    {
         var game = await gameRepository.GetByCodeWithPlayersAndRoundsAsync(gameCode);
         if (game == null) return;
         game.RoundCounter++;

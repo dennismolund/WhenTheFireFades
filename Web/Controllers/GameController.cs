@@ -51,6 +51,13 @@ public class GameController(
             return NotFound();
         }
 
+        if (game.Status == GameStatus.Finished)
+        {
+            var sessions = sessionHelper.GetCurrentGameCode();
+            sessionHelper.ClearCurrentGameCode();
+            return RedirectToAction(nameof(Index), "Home");
+        }
+
         var tempUserId = sessionHelper.GetOrCreateTempUserId();
         var authenticatedUserId = sessionHelper.GetAuthenticatedUserId();
         var authenticatedName = sessionHelper.GetAuthenticatedUserName();        
