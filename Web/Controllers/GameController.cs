@@ -274,7 +274,6 @@ public class GameController(
         var team = new Team
         {
             RoundId = currentRound.RoundId,
-            AttemptNumber = currentRound.Teams.Count + 1,
             IsActive = true,
             CreatedAtUtc = DateTime.UtcNow,
             Round = currentRound,

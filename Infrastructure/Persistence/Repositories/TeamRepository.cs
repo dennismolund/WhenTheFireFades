@@ -1,8 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Application.Interfaces;
+﻿using Application.Interfaces;
 using Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Persistence;
+namespace Infrastructure.Persistence.Repositories;
 
 public class TeamRepository(ApplicationDbContext db) : ITeamRepository
 {
@@ -28,7 +28,6 @@ public class TeamRepository(ApplicationDbContext db) : ITeamRepository
         return await db.Teams
            .Include(tp => tp.Members)
            .Include(tp => tp.Votes)
-           .OrderByDescending(tp => tp.AttemptNumber)
            .FirstOrDefaultAsync(tp => tp.RoundId == roundId);
     }
 
@@ -38,7 +37,6 @@ public class TeamRepository(ApplicationDbContext db) : ITeamRepository
        .Where(tp => tp.RoundId == roundId && tp.IsActive)
        .Include(tp => tp.Votes)
        .Include(tp => tp.Members)
-       .OrderByDescending(tp => tp.AttemptNumber)
        .FirstOrDefaultAsync();
     }
 

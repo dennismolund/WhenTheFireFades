@@ -13,8 +13,8 @@ public class Team
     [Required]
     public int RoundId { get; set; }
 
-    [Required]
-    public int AttemptNumber { get; set; }
+    // [Required]
+    // public int AttemptNumber { get; set; }
 
     [Required]
     public bool IsActive { get; set; } = true;

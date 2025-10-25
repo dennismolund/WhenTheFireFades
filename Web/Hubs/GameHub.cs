@@ -148,7 +148,7 @@ public class GameHub(
                 rejectionCount,
                 approvalCount,
                 voteIsApproved,
-                attemptNumber = team.AttemptNumber
+                attemptNumber = game.ConsecutiveRejectedProposals
             });
         }
     }
