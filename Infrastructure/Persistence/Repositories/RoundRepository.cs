@@ -1,9 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Application.Interfaces;
+﻿using Application.Interfaces;
 using Domain.Entities;
 using Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Persistence;
+namespace Infrastructure.Persistence.Repositories;
 
 public class RoundRepository(ApplicationDbContext db) : IRoundRepository
 {
@@ -12,19 +12,12 @@ public class RoundRepository(ApplicationDbContext db) : IRoundRepository
         await db.Rounds.AddAsync(round);
     }
 
-    public async Task<Round?> GetCurrentRoundByGameId(int gameId, int roundNumber)
-    {
-        Round? round = await db.Rounds.FirstOrDefaultAsync(r => r.GameId == gameId && r.RoundNumber == roundNumber);
-        return round;
-    }
-
     public async Task UpdateRoundStatus(int roundId, RoundStatus status)
     {
         var round = await db.Rounds.FindAsync(roundId);
         if (round != null)
         {
             round.Status = status;
-            round.UpdatedAtUtc = DateTime.UtcNow;
         }
     }
 

@@ -1,8 +1,5 @@
 ﻿using Domain.Enums;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Entities;
 
@@ -18,7 +15,7 @@ public class GamePlayer
     
     public string? UserId { get; set; }
 
-    [StringLength(40)]
+    [MaxLength(40)]
     public string Nickname { get; set; } = string.Empty;
 
     [Required]
@@ -26,20 +23,12 @@ public class GamePlayer
 
     [Required]
     public PlayerRole Role { get; set; } = PlayerRole.Human;
-
-    [Required]
-    public bool IsReady { get; set; } = false;
-
+    
     [Required]
     public bool IsConnected { get; set; } = true;
-
-    [Column(TypeName = "datetime2")]
-    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
-
-    [Column(TypeName = "datetime2")]
-    public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
-
-    [ForeignKey(nameof(GameId))]
+    
     public Game Game { get; set; } = default!;
+    
+    
 }
 

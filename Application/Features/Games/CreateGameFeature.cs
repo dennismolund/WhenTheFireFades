@@ -1,11 +1,7 @@
 ﻿using Application.Interfaces;
 using Domain.Entities;
 using Domain.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Domain.ValueObjects;
 
 namespace Application.Features.Games;
 public class CreateGameFeature(IGameRepository gameRepository)
@@ -14,15 +10,13 @@ public class CreateGameFeature(IGameRepository gameRepository)
     {
         var game = new Game
         {
-            ConnectionCode = GenerateCode(),
+            ConnectionCode = GameCode.GenerateCode(),
             LeaderSeat = 1,
             Status = GameStatus.Lobby,
             GameWinner = GameResult.Unknown,
             RoundCounter = 0,
             SuccessCount = 0,
             SabotageCount = 0,
-            CreatedAtUtc = DateTime.UtcNow,
-            UpdatedAtUtc = DateTime.UtcNow
         };
 
         await gameRepository.AddGameAsync(game);
@@ -31,10 +25,5 @@ public class CreateGameFeature(IGameRepository gameRepository)
         return game;
     }
 
-    private static string GenerateCode()
-    {
-        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        var random = new Random();
-        return new string(Enumerable.Repeat(chars, 6).Select(s => s[random.Next(s.Length)]).ToArray());
-    }
+
 }

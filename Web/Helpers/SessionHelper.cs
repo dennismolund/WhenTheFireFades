@@ -1,6 +1,4 @@
 ﻿using System.Security.Claims;
-using Microsoft.AspNetCore.Http;
-using System.Text.Json;
 
 namespace Web.Helpers;
 
@@ -72,7 +70,7 @@ public class SessionHelper(IHttpContextAccessor httpContextAccessor)
     
     public string? GetAuthenticatedUserId()
     {
-        return httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+        return httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
     }
 
     public string? GetAuthenticatedUserName()

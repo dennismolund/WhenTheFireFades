@@ -1,8 +1,5 @@
 ﻿using Domain.Enums;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Entities;
 
@@ -12,7 +9,7 @@ public class Game
     public int GameId { get; set; }
 
     [Required]
-    [StringLength(10)]
+    [MaxLength(10)]
     public string ConnectionCode { get; set; } = default!;
 
     [Required]
@@ -35,12 +32,6 @@ public class Game
 
     [Required]
     public int ConsecutiveRejectedProposals { get; set; } = 0;
-
-    [Column(TypeName = "datetime2")]
-    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
-
-    [Column(TypeName = "datetime2")]
-    public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
 
     public ICollection<GamePlayer> Players { get; set; } = new List<GamePlayer>();
     public ICollection<Round> Rounds { get; set; } = new List<Round>();

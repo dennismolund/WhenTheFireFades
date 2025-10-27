@@ -1,8 +1,5 @@
 ﻿using Domain.Enums;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Entities;
 
@@ -30,14 +27,7 @@ public class Round
 
     [Required]
     public int SabotageCounter { get; set; } = 0;
-
-    [Column(TypeName = "datetime2")]
-    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
-
-    [Column(TypeName = "datetime2")]
-    public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
-
-    [ForeignKey(nameof(GameId))]
+    
     public Game Game { get; set; } = default!;
 
     public ICollection<Team> Teams { get; set; } = new List<Team>();

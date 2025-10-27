@@ -38,9 +38,6 @@ namespace Infrastructure.Persistence.Migrations
                     b.Property<int>("ConsecutiveRejectedProposals")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("datetime2");
-
                     b.Property<int>("GameWinner")
                         .HasColumnType("int");
 
@@ -59,9 +56,6 @@ namespace Infrastructure.Persistence.Migrations
                     b.Property<int>("SuccessCount")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("UpdatedAtUtc")
-                        .HasColumnType("datetime2");
-
                     b.HasKey("GameId");
 
                     b.ToTable("Games");
@@ -75,16 +69,10 @@ namespace Infrastructure.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("GamePlayerId"));
 
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("datetime2");
-
                     b.Property<int>("GameId")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsConnected")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsReady")
                         .HasColumnType("bit");
 
                     b.Property<string>("Nickname")
@@ -101,11 +89,7 @@ namespace Infrastructure.Persistence.Migrations
                     b.Property<int?>("TempUserId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("UpdatedAtUtc")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("UserId")
-                        .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("GamePlayerId");
@@ -124,9 +108,6 @@ namespace Infrastructure.Persistence.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MissionVoteId"));
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("datetime2");
 
                     b.Property<bool>("IsSuccess")
                         .HasColumnType("bit");
@@ -152,9 +133,6 @@ namespace Infrastructure.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoundId"));
 
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("datetime2");
-
                     b.Property<int>("GameId")
                         .HasColumnType("int");
 
@@ -176,9 +154,6 @@ namespace Infrastructure.Persistence.Migrations
                     b.Property<int>("TeamSize")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("UpdatedAtUtc")
-                        .HasColumnType("datetime2");
-
                     b.HasKey("RoundId");
 
                     b.HasIndex("GameId");
@@ -193,9 +168,6 @@ namespace Infrastructure.Persistence.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TeamId"));
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("datetime2");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -241,9 +213,6 @@ namespace Infrastructure.Persistence.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TeamVoteId"));
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("Datetime2");
 
                     b.Property<bool>("IsApproved")
                         .HasColumnType("bit");

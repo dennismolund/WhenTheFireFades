@@ -17,14 +17,6 @@ public class GameRepository(ApplicationDbContext db) : IGameRepository
             .FirstOrDefaultAsync(g => g.ConnectionCode == code);
     }
 
-    public async Task<Game?> GetByIdWithPlayersAndRoundsAsync(int gameId)
-    {
-        return await db.Games
-            .Include(g => g.Players)
-            .Include(g => g.Rounds)
-            .FirstOrDefaultAsync(g => g.GameId == gameId);
-    }
-
     public async Task<Game?> GetByCodeWithPlayersAsync(string code)
     {
         var game = await db.Games
@@ -32,13 +24,6 @@ public class GameRepository(ApplicationDbContext db) : IGameRepository
             .FirstOrDefaultAsync(g => g.ConnectionCode == code);
 
         return game;
-    }
-
-    public async Task<Game?> GetByIdWithPlayersAsync(int gameId)
-    {
-        return await db.Games
-            .Include(g => g.Players)
-            .FirstOrDefaultAsync(g => g.GameId == gameId);
     }
 
     public async Task SaveChangesAsync()

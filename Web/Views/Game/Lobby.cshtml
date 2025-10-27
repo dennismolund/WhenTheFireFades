@@ -20,30 +20,12 @@
                             <strong>@player.Nickname</strong>
                             <span class="badge bg-secondary">Seat @player.Seat</span>
                         </div>
-                        <div>
-                            @if (player.IsReady)
-                            {
-                                <span class="badge bg-success">Ready</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-warning">Not Ready</span>
-                            }
-                        </div>
                     </div>
                 }
             </div>
         </div>
 
         <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Your Status</h5>
-                    <button id="toggleReadyBtn" class="btn btn-primary w-100 mb-2">
-                        Toggle Ready
-                    </button>
-                </div>
-            </div>
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Start Game</h5>
@@ -97,11 +79,7 @@
             updatePlayersList(data.players);
             updatePlayerCount(data.totalPlayers);
         });
-
-        connection.on("PlayerReadyChanged", function (data) {
-            console.log("Player ready status changed:", data);
-            updatePlayerReadyStatus(data.tempUserId, data.isReady);
-        });
+        
 
         // Start game
         connection.on("GameStarted", function (data) {
@@ -119,15 +97,7 @@
             .catch(function (err) {
                 console.error("Error connecting to SignalR:", err);
             });
-
-        // Handle ready button click
-        document.getElementById("toggleReadyBtn").addEventListener("click", function() {
-            isReady = !isReady;
-            connection.invoke("UpdateReadyStatus", gameCode, isReady)
-                .catch(function (err) {
-                    console.error("Error updating ready status:", err);
-                });
-        });
+        
 
         // Update the players list in the UI
         function updatePlayersList(players) {
@@ -139,31 +109,15 @@
                 playerDiv.className = "list-group-item d-flex justify-content-between align-items-center";
                 playerDiv.setAttribute("data-player-id", player.tempUserId);
 
-                const readyBadge = player.isReady
-                    ? '<span class="badge bg-success">Ready</span>'
-                    : '<span class="badge bg-warning">Not Ready</span>';
-
                 playerDiv.innerHTML = `
                     <div>
                         <strong>${player.nickname}</strong>
                         <span class="badge bg-secondary">Seat ${player.seat}</span>
                     </div>
-                    <div>${readyBadge}</div>
                 `;
 
                 playersList.appendChild(playerDiv);
             });
-        }
-
-        // Update a specific player's ready status
-        function updatePlayerReadyStatus(playerId, isReady) {
-            const playerDiv = document.querySelector(`[data-player-id="${playerId}"]`);
-            if (playerDiv) {
-                const badgeDiv = playerDiv.querySelector("div:last-child");
-                badgeDiv.innerHTML = isReady
-                    ? '<span class="badge bg-success">Ready</span>'
-                    : '<span class="badge bg-warning">Not Ready</span>';
-            }
         }
 
         // Update player count

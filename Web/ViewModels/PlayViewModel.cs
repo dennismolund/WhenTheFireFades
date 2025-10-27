@@ -1,5 +1,6 @@
 ﻿using Domain.Entities;
 using Domain.Enums;
+using Domain.Rules;
 
 namespace Web.ViewModels;
     
@@ -22,7 +23,7 @@ public sealed class PlayViewModel
     public bool IsMissionPhase => CurrentRound.Status == RoundStatus.SecretChoices;
 
     public int CurrentAttemptNumber => Game.ConsecutiveRejectedProposals + 1;
-    public int RemainingAttempts => 5 - Game.ConsecutiveRejectedProposals;
+    public int RemainingAttempts => GameRules.MaxConsecutiveRejections - Game.ConsecutiveRejectedProposals;
 
     public bool IsOnMissionTeam
     {

@@ -1,8 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Application.Interfaces;
 using Domain.Entities;
-using Application.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Persistence;
+namespace Infrastructure.Persistence.Repositories;
 
 public class GamePlayerRepository(ApplicationDbContext db) : IGamePlayerRepository
 {
@@ -12,27 +12,8 @@ public class GamePlayerRepository(ApplicationDbContext db) : IGamePlayerReposito
             .AddAsync(player);
     }
 
-    public async Task<GamePlayer?> GetByGameAndTempUserAsync(int gameId, int tempUserId)
-    {
-        return await db.GamePlayers
-            .SingleOrDefaultAsync(p => p.GameId == gameId && p.TempUserId == tempUserId);
-    }
-
-    public Task<GamePlayer?> GetByGameCodeAndTempUserAsync(string gameCode, int tempUserId)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<GamePlayer?> GetByIdAsync(int gamePlayerId)
-    {
-        throw new NotImplementedException();
-    }
-
     public async Task<int> GetNextAvailableSeatAsync(int gameId)
     {
-        var nextSeat = await db.GamePlayers
-            .Where(gp => gp.GameId == gameId).ToListAsync();
-
         var takenSeats = await db.GamePlayers
             .Where(gp => gp.GameId == gameId)
             .OrderBy(gp => gp.Seat)
@@ -57,31 +38,6 @@ public class GamePlayerRepository(ApplicationDbContext db) : IGamePlayerReposito
         return expectedSeat;
     }
 
-    public Task<int> GetPlayerCountAsync(int gameId)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<List<GamePlayer>> GetPlayersByGameCodeAsync(string gameCode)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<List<GamePlayer>> GetPlayersByGameIdAsync(int gameId)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<bool> IsPlayerInGameAsync(int gameId, int tempUserId)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<bool> IsSeatTakenAsync(int gameId, int seat)
-    {
-        throw new NotImplementedException();
-    }
-
     public void RemovePlayer(GamePlayer player)
     {
         db.GamePlayers.Remove(player);
@@ -91,9 +47,5 @@ public class GamePlayerRepository(ApplicationDbContext db) : IGamePlayerReposito
     {
         await db.SaveChangesAsync();
     }
-
-    public Task UpdatePlayerAsync(GamePlayer player)
-    {
-        throw new NotImplementedException();
-    }
+    
 }

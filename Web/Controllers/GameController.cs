@@ -53,7 +53,6 @@ public class GameController(
 
         if (game.Status == GameStatus.Finished)
         {
-            var sessions = sessionHelper.GetCurrentGameCode();
             sessionHelper.ClearCurrentGameCode();
             return RedirectToAction(nameof(Index), "Home");
         }
@@ -118,7 +117,6 @@ public class GameController(
                     p.TempUserId,
                     p.Nickname,
                     p.Seat,
-                    p.IsReady,
                     p.IsConnected
                 }).ToList(),
                 totalPlayers = game.Players.Count
@@ -275,7 +273,6 @@ public class GameController(
         {
             RoundId = currentRound.RoundId,
             IsActive = true,
-            CreatedAtUtc = DateTime.UtcNow,
             Round = currentRound,
             Members = selectedSeats.Select(seat => new TeamMember
             {

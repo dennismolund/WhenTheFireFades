@@ -1,4 +1,6 @@
-﻿namespace Web.Hubs;
+﻿using Domain.Rules;
+
+namespace Web.Hubs;
 
 using Application.Interfaces;
 using Application.Services;
@@ -33,44 +35,16 @@ public class GameHub(
                     p.TempUserId,
                     p.Nickname,
                     p.Seat,
-                    p.IsReady,
                     p.IsConnected
                 }).ToList(),
                 totalPlayers = game.Players.Count
             });
         }
     }
-    public async Task UpdateReadyStatus(string gameCode, bool isReady)
-    {
-        var tempUserId = sessionHelper.GetTempUserId();
-        if (tempUserId == null)
-        {
-            return;
-        }
-
-        var game = await gameRepository.GetByCodeWithPlayersAsync(gameCode);
-        var player = game?.Players.FirstOrDefault(p => p.TempUserId == tempUserId.Value);
-        if (player != null)
-        {
-            player.IsReady = isReady;
-            player.UpdatedAtUtc = DateTime.UtcNow;
-            await gamePlayerRepository.SaveChangesAsync();
-
-            await Clients.Group(gameCode).SendAsync("PlayerReadyChanged", new
-            {
-                tempUserId = player.TempUserId,
-                nickname = player.Nickname,
-                isReady = player.IsReady,
-                allPlayersReady = game?.Players.All(p => p.IsReady)
-            });
-        }
-    }
 
     public async Task JoinGame(string gameCode)
     {
-        var tempUserId = sessionHelper.GetTempUserId();
         await Groups.AddToGroupAsync(Context.ConnectionId, gameCode);
-        Console.WriteLine($"Player {tempUserId} joined game {gameCode}");
     }
 
     public async Task VoteOnTeam(string gameCode, bool isApproved)
@@ -101,7 +75,6 @@ public class GameHub(
             TeamId = team.TeamId,
             Seat = voter.Seat,
             IsApproved = isApproved,
-            CreatedAtUtc = DateTime.UtcNow,
             Team = team
         };
 
@@ -157,11 +130,10 @@ public class GameHub(
     {
         game.ConsecutiveRejectedProposals++;
 
-        if (game.ConsecutiveRejectedProposals >= 5)
+        if (game.ConsecutiveRejectedProposals >= GameRules.MaxConsecutiveRejections)
         {
             game.Status = GameStatus.Finished;
             game.GameWinner = GameResult.Shapeshifter;
-            game.UpdatedAtUtc = DateTime.UtcNow;
 
             await gameRepository.SaveChangesAsync();
 
@@ -176,10 +148,8 @@ public class GameHub(
         }
 
         game.LeaderSeat = GetNewLeaderSet(game);
-        game.UpdatedAtUtc = DateTime.UtcNow;
 
         round.Status = RoundStatus.TeamSelection;
-        round.UpdatedAtUtc = DateTime.UtcNow;
 
         team.IsActive = false;
 
@@ -198,7 +168,6 @@ public class GameHub(
         game.ConsecutiveRejectedProposals = 0;
 
         round.Status = RoundStatus.SecretChoices;
-        round.UpdatedAtUtc = DateTime.UtcNow;
 
         await gameRepository.SaveChangesAsync();
         await roundRepository.SaveChangesAsync();
@@ -237,7 +206,6 @@ public class GameHub(
             RoundId = round.RoundId,
             Seat = voter.Seat,
             IsSuccess = isSuccess,
-            CreatedAtUtc = DateTime.UtcNow,
             Round = round
         };
 
@@ -306,21 +274,18 @@ public class GameHub(
     private async Task HandleVoteSabotaged(Game game, Round round, string gameCode)
     {
         game.SabotageCount++;
-        game.UpdatedAtUtc = DateTime.UtcNow;
 
         round.SabotageCounter++;
         round.Result = RoundResult.Sabotage;
         round.Status = RoundStatus.Completed;
-        round.UpdatedAtUtc = DateTime.UtcNow;
 
         await gameRepository.SaveChangesAsync();
         await roundRepository.SaveChangesAsync();
 
-        if(game.SabotageCount >= 3)
+        if(game.SabotageCount >= GameRules.SabotagesNeededToLose)
         {
             game.Status = GameStatus.Finished;
             game.GameWinner = GameResult.Shapeshifter;
-            game.UpdatedAtUtc = DateTime.UtcNow;
             await gameRepository.SaveChangesAsync();
             await Clients.Group(gameCode).SendAsync("GameEnded", new
             {
@@ -335,11 +300,9 @@ public class GameHub(
     {
         
         game.SuccessCount++;
-        game.UpdatedAtUtc = DateTime.UtcNow;
 
         round.Result = RoundResult.Success;
         round.Status = RoundStatus.Completed;
-        round.UpdatedAtUtc = DateTime.UtcNow;
 
         await gameRepository.SaveChangesAsync();
         await roundRepository.SaveChangesAsync();
@@ -348,7 +311,6 @@ public class GameHub(
         {
             game.Status = GameStatus.Finished;
             game.GameWinner = GameResult.Human;
-            game.UpdatedAtUtc = DateTime.UtcNow;
             await gameRepository.SaveChangesAsync();
             await Clients.Group(gameCode).SendAsync("GameEnded", new
             {
