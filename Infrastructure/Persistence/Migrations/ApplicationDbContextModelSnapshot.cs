@@ -169,9 +169,6 @@ namespace Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<bool?>("IsApproved")
-                        .HasColumnType("bit");
-
                     b.Property<int>("RoundId")
                         .HasColumnType("int");
 
