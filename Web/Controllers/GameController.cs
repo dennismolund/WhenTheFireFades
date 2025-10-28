@@ -68,12 +68,22 @@ public class GameController(
             await gameOrchestrator.CreateGamePlayerAsync(game, tempUserId, authenticatedName, authenticatedUserId);
             game = await gameRepository.GetByCodeWithPlayersAsync(code);
         }
+        
+        var viewModel = new LobbyViewModel
+        {
+            ConnectionCode = code,
+            Game = game,
+            CurrentPlayer = game.Players.FirstOrDefault(p => p.TempUserId == tempUserId),
+            PlayerCount = game.Players.Count,
+            
+            
+        };
 
         ViewBag.TempUserId = tempUserId;
         ViewBag.PlayerNickname = sessionHelper.GetPlayerNickname();
         ViewBag.GameCode = code;
 
-        return View(game);
+        return View(viewModel);
     }
 
     [HttpPost]

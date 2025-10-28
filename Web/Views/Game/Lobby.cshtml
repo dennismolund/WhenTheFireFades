@@ -1,4 +1,4 @@
-﻿@model Domain.Entities.Game
+﻿@model Web.ViewModels.LobbyViewModel
 
 @{
     ViewData["Title"] = "Game Lobby";
@@ -10,9 +10,9 @@
 
     <div class="row">
         <div class="col-md-8">
-            <h3>Players (<span id="playerCount">@Model.Players.Count</span>)</h3>
+            <h3>Players (<span id="playerCount">@Model.PlayerCount</span>)</h3>
             <div id="playersList" class="list-group">
-                @foreach (var player in Model.Players)
+                @foreach (var player in Model.GamePlayers)
                 {
                     <div class="list-group-item d-flex justify-content-between align-items-center"
                          data-player-id="@player.TempUserId">
@@ -26,18 +26,21 @@
         </div>
 
         <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Start Game</h5>
-                    <form asp-controller="game" asp-action="StartGame" method="post">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="code" value="@Model.ConnectionCode">
-                        <button id="startBtn" class="btn btn-success w-100">
-                            Start Game
-                        </button>
-                    </form>
+            @if (Model.IsLeader)
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Start Game</h5>
+                        <form asp-controller="game" asp-action="StartGame" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="code" value="@Model.ConnectionCode">
+                            <button id="startBtn" class="btn btn-success w-100" disabled>
+                                Start Game
+                            </button>
+                        </form>
+                    </div>
                 </div>
-            </div>
+            }
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Leave</h5>
@@ -60,7 +63,7 @@
     <script>
         const gameCode = '@Model.ConnectionCode';
         const tempUserId = @ViewBag.TempUserId;
-        let isReady = false;
+        const startBtn = document.getElementById('startBtn');
 
         // Create connection to SignalR hub
         const connection = new signalR.HubConnectionBuilder()
@@ -72,15 +75,16 @@
             console.log("Player joined:", data);
             updatePlayersList(data.players);
             updatePlayerCount(data.totalPlayers);
+            updateStartBtnUI(data.totalPlayers);
         });
 
         connection.on("PlayerLeft", function (data) {
             console.log("Player left:", data);
             updatePlayersList(data.players);
             updatePlayerCount(data.totalPlayers);
+            updateStartBtnUI(data.totalPlayers);
         });
         
-
         // Start game
         connection.on("GameStarted", function (data) {
             console.log("Game started!", data);
@@ -123,6 +127,10 @@
         // Update player count
         function updatePlayerCount(count) {
             document.getElementById("playerCount").textContent = count;
+        }
+        
+        function updateStartBtnUI(count) {
+            startBtn.disabled = count < 2; //Ändra till 5 i production
         }
 
     </script>
