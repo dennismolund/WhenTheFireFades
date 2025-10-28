@@ -313,7 +313,7 @@ public class GameHub(
             await gameRepository.SaveChangesAsync();
             await Clients.Group(gameCode).SendAsync("GameEnded", new
             {
-                winner = "Resistance",
+                winner = "Humans",
                 reason = "3 successful missions",
                 gameResult = GameResult.Human
             });
