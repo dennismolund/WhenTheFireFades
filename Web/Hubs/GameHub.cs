@@ -275,7 +275,6 @@ public class GameHub(
     {
         game.SabotageCount++;
 
-        round.SabotageCounter++;
         round.Result = RoundResult.Sabotage;
         round.Status = RoundStatus.Completed;
 

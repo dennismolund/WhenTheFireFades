@@ -24,9 +24,6 @@ public class Round
 
     [Required]
     public int TeamSize { get; set; }
-
-    [Required]
-    public int SabotageCounter { get; set; } = 0;
     
     public Game Game { get; set; } = default!;
 

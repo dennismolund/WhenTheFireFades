@@ -145,9 +145,6 @@ namespace Infrastructure.Persistence.Migrations
                     b.Property<int>("RoundNumber")
                         .HasColumnType("int");
 
-                    b.Property<int>("SabotageCounter")
-                        .HasColumnType("int");
-
                     b.Property<int>("Status")
                         .HasColumnType("int");
 

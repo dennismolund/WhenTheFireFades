@@ -19,7 +19,6 @@ public sealed class CreateRoundFeature(IRoundRepository roundRepository)
             TeamSize = teamSize,
             Status = RoundStatus.TeamSelection,
             Result = RoundResult.Unknown,
-            SabotageCounter = 0,
         };
 
         await roundRepository.AddRoundAsync(round);
