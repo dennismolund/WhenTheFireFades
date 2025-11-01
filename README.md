@@ -3,14 +3,33 @@
 When the Fire Fades is a web-based social deduction game for exactly five players. Two hidden shapeshifters try to snuff out the campfire while three humans fight to keep it alive by completing missions across five escalating rounds. The solution is organised according to Clean Architecture: the `Domain` project owns the core game rules, `Application` coordinates use cases, `Infrastructure` hosts technical concerns such as persistence and SignalR hubs, and the `Web` project delivers the ASP.NET Core MVC experience.
 
 ## Table of contents
+- [Getting started](#getting-started)
 - [Game overview](#game-overview)
 - [Gameplay at a glance](#gameplay-at-a-glance)
 - [Tech stack](#tech-stack)
 - [Solution architecture](#solution-architecture)
 - [Domain & data model](#domain--data-model)
 - [Client experience](#client-experience)
-- [Getting started](#getting-started)
-- [Roadmap](#roadmap)
+
+## Getting started
+1. **Clone & restore dependencies**
+   ```bash
+   git clone https://github.com/<your-account>/WhenTheFireFades.git
+   cd WhenTheFireFades
+   dotnet restore
+   ```
+2. **Configure the connection string**
+   - Provide a `DefaultConnection` entry either in `appsettings.Development.json`, via [User Secrets](https://learn.microsoft.com/aspnet/core/security/app-secrets), or environment variables. The app targets SQL Server.
+3. **Apply migrations**
+   ```bash
+   dotnet ef database update --project Infrastructure/Infrastructure.csproj --startup-project Web/Web.csproj
+   ```
+4. **Run the app**
+   ```bash
+   dotnet run --project Web/Web.csproj
+   ```
+5. **Open the site**
+   - Navigate to `https://localhost:5001` (or the HTTP port shown in console output).
 
 ## Game overview
 - **Players:** 5 (3 Humans, 2 Shapeshifters)
@@ -56,19 +75,19 @@ The solution adheres to Clean Architecture with four isolated projects that refe
 
 | Project | Layer | Responsibility |
 | --- | --- | --- |
-| `Domain/` | Core | Pure game domain model: entities (`Game`, `Round`, `Team`, etc.) and supporting enums with no external dependencies. |
-| `Application/` | Application | Use-case orchestration (`Services/GameOrchestrator`), contracts (`Interfaces/IGameRepository`, `ITeamRepository`, etc.), and business rules that consume the domain model. |
-| `Infrastructure/` | Infrastructure | EF Core persistence (`Persistence/ApplicationDbContext`, repository implementations, migrations) and SignalR wiring under `Realtime/`. Implements the interfaces defined by the Application layer. |
+| `Domain/` | Core | Pure game domain model: entities (`Game`, `Round`, `Team`, etc.), business rules, value objects and supporting enums with no external dependencies. |
+| `Application/` | Application | Use-case orchestration (`Services/GameOrchestrator`) and contracts (`Interfaces/IGameRepository`, `ITeamRepository`, etc.) |
+| `Infrastructure/` | Infrastructure | EF Core persistence (`Persistence/ApplicationDbContext`, repository implementations, migrations). Implements the interfaces defined by the Application layer. |
 | `Web/` | Presentation | ASP.NET Core MVC front end: controllers, hubs, Razor views, and DI configuration (`Program.cs`) that stitches Application and Infrastructure together.
 
 ## Domain & data model
 The core entities are:
 
-- **Game** – Tracks connection code, leader seat, round counters, and win state.
+- **Game** – Tracks connection code, leader seat, round counters, win state etc.
 - **GamePlayer** – Associates a seat, nickname, readiness, and temporary user identifier with a game.
 - **Round** – Captures per-round metadata: leader, team size, phase progression, sabotage count, and team vote counter.
-- **Team** – The single mission proposal for a round, storing membership and approval status. (The original design allowed multiple proposals per round, but the current implementation enforces a one-to-one relationship between `Round` and `Team`.)
-- **TeamMember** & **TeamVote** – Which seats were selected and how each player voted on the team.
+- **Team** – The selected team for a round, having one to many relations with the models below (TeamMember, MissionVote).
+- **TeamMember** & **TeamVote** – Which seats were selected to partake in the team and how each player voted on the selected team.
 - **MissionVote** – Secret votes cast by mission participants indicating gather wood or sabotage.
 
 Refer to the `Domain/Entities/` folder for the exact property sets and data annotations that govern persistence rules. Entity Framework Core configuration and migrations live under `Infrastructure/Persistence/`.
@@ -77,32 +96,6 @@ Refer to the `Domain/Entities/` folder for the exact property sets and data anno
 - The landing page (`Views/Home/Index.cshtml`) presents options to create a game or join via code, showing the player nickname stored in session.
 - Entering the lobby subscribes the browser to `GameLobbyHub` where join/leave and ready state changes update all participants instantly.
 - Bootstrap cards and modals provide a polished UI for joining games while keeping the theme atmospheric and minimalistic.
-
-## Getting started
-1. **Clone & restore dependencies**
-   ```bash
-   git clone https://github.com/<your-account>/WhenTheFireFades.git
-   cd WhenTheFireFades
-   dotnet restore
-   ```
-2. **Configure the connection string**
-   - Provide a `DefaultConnection` entry either in `appsettings.Development.json`, via [User Secrets](https://learn.microsoft.com/aspnet/core/security/app-secrets), or environment variables. The app targets SQL Server.
-3. **Apply migrations**
-   ```bash
-   dotnet ef database update --project Infrastructure/Infrastructure.csproj --startup-project Web/Web.csproj
-   ```
-4. **Run the app**
-   ```bash
-   dotnet run --project Web/Web.csproj
-   ```
-5. **Open the site**
-   - Navigate to `https://localhost:5001` (or the HTTP port shown in console output).
-
-## Roadmap
-- Flesh out mission and round resolution services (`RoundService`, `GameRules`).
-- Persist and surface chat history in real time alongside lobby updates.
-- Harden lobby workflows (seat limits, reconnect flows, and handling disconnections in `GameLobbyHub`).
-- Build end-to-end tests covering lobby creation, team proposals, and mission outcomes.
 
 ---
 
