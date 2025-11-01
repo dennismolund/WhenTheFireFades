@@ -137,10 +137,6 @@
                                     <strong>You are the team leader!</strong> Select @Model.CurrentRound.TeamSize player(s) for this mission.
                                 </div>
 
-                                <form id="proposeTeamForm" asp-controller="Game" asp-action="ProposeTeam" method="post">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="code" value="@Model.Game.ConnectionCode" />
-
                                     <div class="mb-3">
                                         <h5>Select Team Members:</h5>
                                         <div id="teamSelection" class="list-group">
@@ -169,10 +165,9 @@
                                         Selected: <strong><span id="selectedCount">0</span> / @Model.CurrentRound?.TeamSize</strong>
                                     </div>
 
-                                    <button type="submit" id="proposeTeamBtn" class="btn btn-success btn-lg w-100" disabled>
+                                    <button id="proposeTeamBtn" class="btn btn-success btn-lg w-100" disabled>
                                         Propose Team
                                     </button>
-                                </form>
                             </div>
                         }
                         else
@@ -422,8 +417,8 @@
             });
 
         if (isLeader && isTeamSelectionPhase) {
-            const form = document.getElementById('proposeTeamForm');
-            const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+            const teamSelection = document.getElementById('teamSelection');
+            const checkboxes = teamSelection.querySelectorAll('input[type="checkbox"]');
             const proposeBtn = document.getElementById('proposeTeamBtn');
             const selectedCountSpan = document.getElementById('selectedCount');
             const teamSize = parseInt(checkboxes[0]?.dataset.teamSize || 2);
@@ -443,6 +438,17 @@
                     updateUI();
                 });
             });
+            
+            proposeBtn.onclick = () => {
+                let checkedIndexes  = [];
+                checkboxes.forEach((checkbox, index) => {
+                    if (checkbox.checked) {
+                        checkedIndexes.push(index+1);
+                    }
+                });
+                console.log(checkedIndexes);
+                connection.invoke("ProposeTeam", gameCode, checkedIndexes);
+            }
         }
 
         //Vote on Team

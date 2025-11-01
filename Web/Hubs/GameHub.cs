@@ -41,11 +41,75 @@ public class GameHub(
             });
         }
     }
-
     public async Task JoinGame(string gameCode)
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, gameCode);
     }
+    
+    public async Task ProposeTeam(string code, List<int> selectedSeats)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+            return;
+
+        code = code.Trim().ToUpperInvariant();
+
+        var game = await gameRepository.GetByCodeWithPlayersAndRoundsAsync(code);
+        if (game == null)
+            return;
+
+        var tempUserId = sessionHelper.GetTempUserId();
+        if (tempUserId == null)
+            return;
+
+        var leader = game.Players.FirstOrDefault(p => p.Seat == game.LeaderSeat);
+        if (leader == null || leader.TempUserId != tempUserId)
+            return;
+
+        var currentRound = game.Rounds.OrderByDescending(r => r.RoundNumber).FirstOrDefault();
+        if (currentRound == null)
+            return;
+
+        if (selectedSeats.Count != currentRound.TeamSize)
+        {
+            return;
+        }
+
+        var team = new Team
+        {
+            RoundId = currentRound.RoundId,
+            IsActive = true,
+            Round = currentRound,
+            Members = selectedSeats.Select(seat => new TeamMember
+            {
+                Seat = seat
+            }).ToList()
+        };
+
+        await teamRepository.AddTeamAsync(team);
+        await teamRepository.SaveChangesAsync();
+
+        await roundRepository.UpdateRoundStatus(currentRound.RoundId, RoundStatus.VoteOnTeam);
+        await roundRepository.SaveChangesAsync();
+
+        var teamMembers = game.Players
+            .Where(p => selectedSeats.Contains(p.Seat))
+            .Select(p => new
+            {
+                p.TempUserId,
+                p.Nickname,
+                p.Seat
+            })
+            .ToList();
+
+        await Clients.Group(code).SendAsync("TeamProposed", new
+        {
+            leaderSeat = game.LeaderSeat,
+            leaderNickname = leader.Nickname,
+            teamMembers,
+            teamSize = teamMembers.Count
+        });
+    }
+
 
     public async Task VoteOnTeam(string gameCode, bool isApproved)
     {
