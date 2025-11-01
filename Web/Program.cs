@@ -1,8 +1,8 @@
-using Application.Features.GamePlayers;
-using Application.Features.Games;
-using Application.Features.Rounds;
 using Application.Interfaces;
 using Application.Services;
+using Application.UseCases.GamePlayers;
+using Application.UseCases.Games;
+using Application.UseCases.Rounds;
 using Infrastructure.Identity;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Repositories;

@@ -1,7 +1,7 @@
 ﻿using Domain.Entities;
-using Application.Features.Games;
-using Application.Features.GamePlayers;
-using Application.Features.Rounds;
+using Application.UseCases.GamePlayers;
+using Application.UseCases.Games;
+using Application.UseCases.Rounds;
 
 
 namespace Application.Services;

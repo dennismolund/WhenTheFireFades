@@ -4,7 +4,7 @@ using Domain.Enums;
 using Domain.Rules;
 using Domain.Services;
 
-namespace Application.Features.Games;
+namespace Application.UseCases.Games;
 public sealed class StartGameFeature(IGameRepository gameRepository)
 {
     public async Task ExecuteAsync(Game game)

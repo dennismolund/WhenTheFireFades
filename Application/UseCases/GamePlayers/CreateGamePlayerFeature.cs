@@ -2,7 +2,7 @@
 using Domain.Entities;
 using Domain.Enums;
 
-namespace Application.Features.GamePlayers;
+namespace Application.UseCases.GamePlayers;
 public sealed class CreateGamePlayerFeature(IGamePlayerRepository gamePlayerRepository)
 {
     public async Task<GamePlayer> ExecuteAsync(Game game, int creatorTempUserId, string? creatorUsername = null, string? userId = null)

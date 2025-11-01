@@ -3,7 +3,7 @@ using Domain.Entities;
 using Domain.Enums;
 using Domain.ValueObjects;
 
-namespace Application.Features.Games;
+namespace Application.UseCases.Games;
 public class CreateGameFeature(IGameRepository gameRepository)
 {
     public async Task<Game> ExecuteAsync()

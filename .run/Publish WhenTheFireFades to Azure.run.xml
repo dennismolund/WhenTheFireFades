@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Publish WhenTheFireFades to Azure" type="AzureWebAppDeploy">
+    <option name="projectConfiguration" value="Release" />
+    <option name="projectPlatform" value="Any CPU" />
+    <option name="publishableProjectPath" value="$PROJECT_DIR$/Web/Web.csproj" />
+    <method v="2" />
+  </configuration>
+</component>

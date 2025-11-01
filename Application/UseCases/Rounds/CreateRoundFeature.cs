@@ -3,7 +3,7 @@ using Domain.Entities;
 using Domain.Enums;
 using Domain.Services;
 
-namespace Application.Features.Rounds;
+namespace Application.UseCases.Rounds;
 public sealed class CreateRoundFeature(IRoundRepository roundRepository)
 {
     public async Task<Round> ExecuteAsync(Game game, int roundNumber, int leaderSeat)
